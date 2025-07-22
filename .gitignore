@@ -29,9 +29,7 @@ flowise/.cache/
 docker-compose.override.yml
 
 # === DATA FILES ===
-#data/logs/
-#data/*.json
-#data/*.txt
+data/convos/
 
 # === JUPYTER NOTEBOOKS ===
 .ipynb_checkpoints/
