@@ -47,5 +47,4 @@ Thumbs.db
 
 # === ENVIRONMENT CONFIG ===
 .env
-.env.*
 secrets.json
