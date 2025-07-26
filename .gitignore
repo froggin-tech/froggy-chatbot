@@ -29,7 +29,8 @@ flowise/.cache/
 docker-compose.override.yml
 
 # === DATA FILES ===
-data/convos/
+data/convos/*
+!data/convos/.gitkeep
 
 # === JUPYTER NOTEBOOKS ===
 .ipynb_checkpoints/
@@ -48,4 +49,5 @@ Thumbs.db
 # === ENVIRONMENT CONFIG ===
 .env
 .env.*
-secrets/
+secrets/*
+!secrets/.gitkeep
