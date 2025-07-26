@@ -11,7 +11,7 @@ import json
 import pandas as pd
 from dotenv import load_dotenv
 import gspread
-from unidades import Unidades
+from enum_unidades import Unidades
 
 # Carga el archivo .env con los secretos
 load_dotenv()

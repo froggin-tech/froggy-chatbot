@@ -12,7 +12,7 @@ from pathlib import Path
 from dotenv import load_dotenv
 import requests
 import pandas as pd
-from canales import Canales
+from enum_canales import Canales
 
 # Quita los límites de las tablas
 pd.set_option('display.max_colwidth', None)
