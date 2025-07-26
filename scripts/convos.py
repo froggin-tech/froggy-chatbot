@@ -1,6 +1,6 @@
 #
-# Versión 0.1
-# Fecha: 24 de julio de 2025
+# Versión 0.2
+# Fecha: 25 de julio de 2025
 #
 # Autor: Helena Ruiz Ramírez
 # Función: Llamar registros de conversaciones de la plataforma LiveConnect según ciertos parametros
@@ -12,6 +12,7 @@ from pathlib import Path
 from dotenv import load_dotenv
 import requests
 import pandas as pd
+from canales import Canales
 
 # Quita los límites de las tablas
 pd.set_option('display.max_colwidth', None)
@@ -69,10 +70,12 @@ def switch_contact_ids(dataframe):
         dataframe.loc[x,'Usuario'] = convo_participants[user_id]
   dataframe.drop(['Interno'], axis=1, inplace=True)
 
+# Crea el token único por usuario para usar las APIs cada que corre el script
 json_resp = get_token()
 pageGearToken = json_resp['PageGearToken']
 print("\n"+json_resp['status_message']+"\n")
 
+# Pasamos el contexto para jalar el historial de una conversacion
 json_resp = get_liveconnect(convo_endpoint, convo_payload, pageGearToken)
 print("\n"+json_resp['status_message']+"\n")
 
@@ -86,7 +89,8 @@ for x in json_resp['data']['participantes']:
   convo_participants[x['id_usuario']] = x['nombre']
 
 # Acomoda los participantes y sus mensajes en una tabla que se exporta como .csv
-# El nombre del archivo es el tag del prospecto/papá y se guarda en el folder de su unidad
+# El nombre del archivo es el tag del prospecto/papá y se guarda en la carpeta de su unidad
+# Finalmente intenta exportar la tabla a un .csv. Si hay un error, lo imprime a la consola
 if json_resp['status'] > 0:
   df = pd.json_normalize(json_resp['data']['mensajes'])
   convo_table = pd.DataFrame(columns=['Usuario','Mensaje','Fecha','Interno'])
@@ -94,9 +98,14 @@ if json_resp['status'] > 0:
   convo_table['Mensaje'] = df['mensaje'].astype(object)
   convo_table['Fecha'] = df['fecha_add'].astype(object)
   convo_table['Interno'] = df['interno']
+
   switch_contact_ids(convo_table)
-  path_name = '../data/convos/'+json_resp['data']['conversacion']['canalnombre']+'/'
+
+  canal = json_resp['data']['conversacion']['canalnombre']
+  canal = Canales.from_value(canal).name
+  path_name = '../data/convos/'+canal+'/'
   os.makedirs(path_name, exist_ok=True)
+
   try:
     convo_table.to_csv(path_name+json_resp['data']['conversacion']['contacto']['nombre']+'.csv', encoding='utf-8-sig')
   except IOError as e:
