@@ -14,14 +14,6 @@ build/
 pip-wheel-metadata/
 *.log
 
-# === FLOWISE (SELF-HOSTED) ===
-flowise/.env
-flowise/uploads/
-flowise/temp/
-flowise/node_modules/
-flowise/.next/
-flowise/.cache/
-
 # === DOCKER ===
 *.pid
 *.sock
@@ -29,11 +21,16 @@ flowise/.cache/
 docker-compose.override.yml
 
 # === DATA FILES ===
-data/convos/*
-!data/convos/.gitkeep
-
-# === JUPYTER NOTEBOOKS ===
-.ipynb_checkpoints/
+data/convos/ELITE/*
+!data/convos/ELITE/.gitkeep
+data/convos/SANNICOLAS/*
+!data/convos/SANNICOLAS/.gitkeep
+data/convos/DOMINIO/*
+!data/convos/DOMINIO/.gitkeep
+data/convos/ESCOBEDO/*
+!data/convos/ESCOBEDO/.gitkeep
+data/convos/DEFAULT/*
+!data/convos/DEFAULT/.gitkeep
 
 # === OS / EDITOR FILES ===
 .DS_Store
