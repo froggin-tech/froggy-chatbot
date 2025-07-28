@@ -8,12 +8,12 @@
 from enum import StrEnum
 
 class Unidades(StrEnum):
-  ELITE = 'E'
-  SANNICOLAS = 'S'
-  DOMINIO = 'D'
-  ESCOBEDO = 'B'
-  DEFAULT = 'L'
+    ELITE = 'E'
+    SANNICOLAS = 'S'
+    DOMINIO = 'D'
+    ESCOBEDO = 'B'
+    DEFAULT = 'L'
 
-  @classmethod
-  def _missing_(cls, value):
-    return Unidades.DEFAULT
+    @classmethod
+    def _missing_(cls, value):
+        return Unidades.DEFAULT
