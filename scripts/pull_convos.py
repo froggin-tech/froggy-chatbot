@@ -1,6 +1,6 @@
 #
-# Versión 0.3
-# Fecha: 29 de julio de 2025
+# Versión 0.4
+# Fecha: 30 de julio de 2025
 #
 # Autor: Helena Ruiz Ramírez
 # Función: Llamar registros de conversaciones de la plataforma LiveConnect según ciertos parametros
