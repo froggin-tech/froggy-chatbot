@@ -1,6 +1,6 @@
 #
-# Versión 1.0
-# Fecha: 25 de julio de 2025
+# Versión 1.1
+# Fecha: 31 de julio de 2025
 #
 # Autores: Helena Ruiz Ramírez
 # Función: Enumerador de las unidades activas en Froggin. Se utiliza para identificar carpetas.

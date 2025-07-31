@@ -1,6 +1,6 @@
 #
 # Versión 1.2
-# Fecha: 30 de julio de 2025
+# Fecha: 31 de julio de 2025
 #
 # Autores: Helena Ruiz Ramírez
 # Función: Enumerador de los equipos en LiveConnect por unidad y medio de comunicación. Se utiliza para identificar carpetas.
