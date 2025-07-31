@@ -8,11 +8,11 @@
 from enum import StrEnum
 
 class Unidades(StrEnum):
-    ELITE = 'E'
-    SANNICOLAS = 'S'
-    DOMINIO = 'D'
-    ESCOBEDO = 'B'
-    DEFAULT = 'L'
+    ELITE = "ELI"
+    SANNICOLAS = "SAN"
+    DOMINIO = "DOM"
+    ESCOBEDO = "ESC"
+    DEFAULT = "DEF"
 
     @classmethod
     def _missing_(cls, value):
