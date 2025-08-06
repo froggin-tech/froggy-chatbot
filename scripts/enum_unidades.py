@@ -7,6 +7,7 @@
 #
 from enum import StrEnum
 
+
 class Unidades(StrEnum):
     ELITE = "ELI"
     SANNICOLAS = "SAN"

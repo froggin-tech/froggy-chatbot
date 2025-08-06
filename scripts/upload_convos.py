@@ -1,6 +1,6 @@
 #
-# Versión 0.2
-# Fecha: 31 de julio de 2025
+# Versión 0.3
+# Fecha: 06 de agosto de 2025
 #
 # Autores: Helena Ruiz Ramírez, Pablo Andrés Ruiz Ramírez
 # Función: Crear spreadsheets a partir de un .csv y colocarlos en un designado folder de Google Drive
@@ -10,8 +10,10 @@ import os
 import pandas as pd
 from dotenv import load_dotenv
 from enum_unidades import Unidades
+from format_convos import apply_formatting
 
-def upload_file_to_google(ssheet_name, csv_buffer, google_creds):
+
+def upload_file_to_google(ssheet_name, csv_buffer, google_creds, system_message_rows):
     # Carga el archivo .env con todos los secrets necesarios
     load_dotenv()
 
@@ -22,12 +24,12 @@ def upload_file_to_google(ssheet_name, csv_buffer, google_creds):
 
     # Si por alguna razón la carpeta indicada no existe, se sube a la de respaldo
     csv_unidad = Unidades(csv_unidad).name
-    folder_name = "G_FOLDER_ID_"+ csv_unidad
+    folder_name = "G_FOLDER_ID_" + csv_unidad
     try:
         ssheet_folder_id = os.environ.get(folder_name, None)
     except:
         csv_unidad = Unidades("DEF").name
-        folder_name = "G_FOLDER_ID_"+ csv_unidad
+        folder_name = "G_FOLDER_ID_" + csv_unidad
         ssheet_folder_id = os.environ.get(folder_name, None)
 
     # Guarda los datos del csv buffer en una tabla para un spreadsheet
@@ -49,3 +51,5 @@ def upload_file_to_google(ssheet_name, csv_buffer, google_creds):
     worksheet = ssheet.worksheet("00 Conversación")
     worksheet.clear()
     worksheet.update(values)
+    apply_formatting(worksheet, system_message_rows)
+    print(f"Se guardó el archivo de '{ssheet_name}'\n\n")

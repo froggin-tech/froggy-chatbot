@@ -1,11 +1,12 @@
 #
-# Versión 1.2
-# Fecha: 31 de julio de 2025
+# Versión 1.3
+# Fecha: 06 de agosto de 2025
 #
 # Autores: Helena Ruiz Ramírez
 # Función: Enumerador de los equipos en LiveConnect por unidad y medio de comunicación. Se utiliza para identificar carpetas.
 #
 from enum import Enum
+
 
 class Equipos(Enum):
     ELI = ("02 Elite", "02 Elite Facebook", "02 Elite Instagram")
@@ -19,4 +20,4 @@ class Equipos(Enum):
         for member in cls:
             if value in member.value:
                 return member
-        return Equipos.DEFAULT
+        return Equipos.DEF
