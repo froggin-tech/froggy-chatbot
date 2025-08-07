@@ -60,7 +60,7 @@ def switch_contact_ids(dataframe, participants, token):
                 dataframe.loc[x, 'Usuario'] = user_json_resp['data']['nombre']
 
 
-def pull_conversations(limit_of_convos_to_pull, google_creds, first_convo=0):
+def pull_conversations(total_convos_to_fetch, google_creds, first_convo, format_option, google_file_ids):
     # Quita los límites de las tablas
     pd.set_option('display.max_colwidth', None)
     pd.set_option('display.width', None)
@@ -73,7 +73,7 @@ def pull_conversations(limit_of_convos_to_pull, google_creds, first_convo=0):
     all_convos_endpoint = "history/conversations"
     all_convos_payload = {
         "initFrom": first_convo,
-        "limit": limit_of_convos_to_pull,  # limite de 5 convos
+        "limit": total_convos_to_fetch,  # limite de 5 convos
     }
     # Todos los mensajes en una conversación
     messages_endpoint = "history/conversation"
@@ -81,18 +81,39 @@ def pull_conversations(limit_of_convos_to_pull, google_creds, first_convo=0):
     participants_endpoint = "history/participants"
 
     # Crea el token único por usuario para usar las APIs cada que corre el script
-    token_json_resp = get_token()
-    pageGearToken = token_json_resp['PageGearToken']
+    try:
+        token_json_resp = get_token()
+    except Exception as e:
+        print("HUBO UN ERROR AL GENERAR EL TOKEN")
+        print(f"{e}")
+        os.system("pause")
+        return
+    else:
+        pageGearToken = token_json_resp['PageGearToken']
+        print("¡TOKEN DE API OBTENIDO!")
 
     # Pasamos el contexto para jalar el historial de conversaciones
+    print("\n... PASO 2/3: BUSCANDO CONVERSACIONES EN LOS SERVIDORES DE LIVECONNECT ...")
     try:
         convos_json_resp = get_liveconnect(all_convos_endpoint, all_convos_payload, pageGearToken)
-        print("\n"+convos_json_resp['status_message']+"\n")
-    except:
-        quit()
+    except Exception as e:
+        print("HUBO UN ERROR AL CONECTARSE CON LIVECONNECT")
+        print(f"{e}")
+        os.system("pause")
+        return
+    if 'data' not in convos_json_resp:
+        print("HUBO UN ERROR AL CONECTARSE CON LIVECONNECT")
+        if 'message' in convos_json_resp:
+            print(f"{convos_json_resp['message']}")
+        os.system("pause")
+        return
+    print("¡CONVERSACIONES OBTENIDAS!")
 
     # Cada 'x' aquí representa cada conversación
+    print("\n... PASO 3/3: SUBIENDO CONVERSACIONES A GOOGLE SHEETS ...")
+    convo_index = 1
     for x in convos_json_resp['data']:
+        print(f"\nCONVERSACIÓN #{convo_index}")
         convo_id = 0  # ID único por conversación, no por historial del usuario
         convo_participants = {}  # Todos las ADM y el usuario de la conversación
         user_messages = []  # Para almacenar todas las conversaciones ligadas a un usuario
@@ -163,9 +184,17 @@ def pull_conversations(limit_of_convos_to_pull, google_creds, first_convo=0):
         file_name = f"{unidad} {user_full_name}"
         try:
             convo_table.to_csv(csv_buffer, index=False, encoding='utf-8-sig')
-        except:
-            print(
-                f"\nHubo un error al guardar la conversación con '{file_name}'")
+        except Exception as e:
+            print(f"Hubo un error al guardar la conversación con '{file_name}' en csv")
+            print(f"{e}")
+            os.system("pause")
+            return
         else:
-            print(f"Se guardó la conversación de '{user_full_name}'")
-            upload_file_to_google(file_name, csv_buffer, google_creds, system_message_rows)
+            print(f"Se guardó la conversación de '{user_full_name}' en formato csv")
+            if not upload_file_to_google(file_name, csv_buffer, google_creds, system_message_rows, format_option, google_file_ids):
+                continue
+
+        convo_index += 1
+
+    print("\n¡TODAS LAS CONVERSACIONES FUERON GUARDADAS EXITOSAMENTE!")
+    os.system("pause")

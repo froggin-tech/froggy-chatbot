@@ -13,7 +13,7 @@ from enum_unidades import Unidades
 from format_convos import apply_formatting
 
 
-def upload_file_to_google(ssheet_name, csv_buffer, google_creds, system_message_rows):
+def upload_file_to_google(ssheet_name, csv_buffer, google_creds, system_message_rows, format_option, google_file_ids):
     # Carga el archivo .env con todos los secrets necesarios
     load_dotenv()
 
@@ -24,32 +24,41 @@ def upload_file_to_google(ssheet_name, csv_buffer, google_creds, system_message_
 
     # Si por alguna razón la carpeta indicada no existe, se sube a la de respaldo
     csv_unidad = Unidades(csv_unidad).name
-    folder_name = "G_FOLDER_ID_" + csv_unidad
-    try:
-        ssheet_folder_id = os.environ.get(folder_name, None)
-    except:
-        csv_unidad = Unidades("DEF").name
+
+    if format_option == 1:
         folder_name = "G_FOLDER_ID_" + csv_unidad
-        ssheet_folder_id = os.environ.get(folder_name, None)
+        try:
+            ssheet_folder_id = os.environ.get(folder_name, None)
+        except:
+            csv_unidad = Unidades("DEF").name
+            folder_name = "G_FOLDER_ID_" + csv_unidad
+            ssheet_folder_id = os.environ.get(folder_name, None)
 
-    # Guarda los datos del csv buffer en una tabla para un spreadsheet
-    try:
-        csv_buffer.seek(0)
-        df = pd.read_csv(csv_buffer, na_filter=False)
-    except:
-        print(f"\nHubo un error al obtener los datos de '{ssheet_name}'")
-    values = [df.columns.tolist()] + df.values.tolist()
+        # Guarda los datos del csv buffer en una tabla para un spreadsheet
+        try:
+            csv_buffer.seek(0)
+            df = pd.read_csv(csv_buffer, na_filter=False)
+        except Exception as e:
+            print(f"Hubo un error al subir la conversación de '{ssheet_name}' a Google Sheets")
+            print(f"{e}")
+            os.system("pause")
+            return
+        values = [df.columns.tolist()] + df.values.tolist()
 
-    # Si el contacto ya tenía un archivo, se actualiza
-    # Si no lo encuentra, entonces crea un nuevo sheet
-    try:
-        ssheet = google_creds.open(ssheet_name)
-    except:
-        ssheet = google_creds.create(ssheet_name, ssheet_folder_id)
-        worksheet = ssheet.add_worksheet(title="00 Conversación", rows=df.shape[0], cols=df.shape[1])
-        ssheet.del_worksheet(ssheet.sheet1)
-    worksheet = ssheet.worksheet("00 Conversación")
-    worksheet.clear()
-    worksheet.update(values)
-    apply_formatting(worksheet, system_message_rows)
-    print(f"Se guardó el archivo de '{ssheet_name}'\n\n")
+        # Si el contacto ya tenía un archivo, se actualiza
+        # Si no lo encuentra, entonces crea un nuevo sheet
+        try:
+            ssheet = google_creds.open(ssheet_name)
+        except:
+            ssheet = google_creds.create(ssheet_name, ssheet_folder_id)
+            worksheet = ssheet.add_worksheet(title="00 Conversación", rows=df.shape[0], cols=df.shape[1])
+            ssheet.del_worksheet(ssheet.sheet1)
+        worksheet = ssheet.worksheet("00 Conversación")
+        worksheet.clear()
+        worksheet.update(values)
+        apply_formatting(worksheet, system_message_rows)
+        print(f"Se subió la conversación de '{ssheet_name}' a Google Sheets")
+        return True
+    else:
+        # guardar data en una pestaña del archivo de la unidad ya existente
+        return True
