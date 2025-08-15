@@ -1,6 +1,6 @@
 #
-# Versión 0.3
-# Fecha: 07 de agosto de 2025
+# Versión 0.4
+# Fecha: 15 de agosto de 2025
 #
 # Autor: Helena Ruiz Ramírez
 # Función: Archivo principal para mandar a llamar las funciones de Froggy
@@ -68,17 +68,17 @@ while True:
             if convos_option == 3:
                 break
             elif convos_option == 1:
-                while not check_input_type(starting_user_index):
-                    starting_user_index = input("\nFila de la primera conversación en LC: ").strip()
+                while not check_input_range(1,99999,starting_user_index):
+                    starting_user_index = input("\nID de la fila de la primera conversación en LC (mín 1): ").strip()
                 while not check_input_type(total_convos_to_fetch):
                     total_convos_to_fetch = input("Total de conversaciones a jalar: ").strip()
                 starting_user_index = int(starting_user_index)
                 total_convos_to_fetch = int(total_convos_to_fetch)
             elif convos_option == 2:
-                while not check_input_type(starting_user_index):
-                    starting_user_index = input("\nFila de la primera conversación en LC: ").strip()
-                while not check_input_type(ending_user_index):
-                    ending_user_index = input("Fila de la última conversación en LC: ").strip()
+                while not check_input_range(1,100,starting_user_index):
+                    starting_user_index = input("\nFila de la primera conversación en la página (1-100): ").strip()
+                while not check_input_range(1,100,ending_user_index):
+                    ending_user_index = input("Fila de la última conversación en la página (1-100): ").strip()
                 while not check_input_type(full_pages):
                     full_pages = input("Páginas completas entre ambas conversaciones: ").strip()
                 starting_user_index = int(starting_user_index)
@@ -94,7 +94,7 @@ while True:
             print("\n-------------------\n")
             print("¿CÓMO DESEA ALMACENAR LAS CONVERSACIONES?")
             print("1. Un archivo por conversación en la carpeta de la unidad")
-            print("2. Crear pestañas en el archivo de la unidad")
+            print("2. Una pestaña por conversación en el archivo de la unidad")
             print("3. Regresar al menú principal")
             while not check_input_range(1,3,format_option):
                 format_option = input("Escoge una opción: ").strip()
@@ -103,32 +103,33 @@ while True:
             if format_option == 3:
                 break
             elif format_option == 2:
-                option = "NO"
-                while option == "NO":
+                while True:
                     print("\nPOR FAVOR ESCRIBA EL ID DEL ARCHIVO DE CADA UNIDAD.")
                     print("FIJESE EN EL URL Y ESCRIBA EL CÓDIGO DESPUÉS DE LA DIAGONAL.")
                     print("EJEMPLO: 'https://docs.google.com/spreadsheets/d/12345...', EL ID ES '12345...'\n")
                     # Itera cada una de las unidades registradas en el archivo enum_equipos.py
                     # ¡Es muy importante mantener este y enum_equipos actualizados si hay cambios en las sucursales/etiquetas!
-                    for x in Unidades:
-                        google_file_ids[x.name] = input(f"{x.name}: ")
+                    for item in Unidades:
+                        google_file_ids[item.name] = input(f"{item.name}: ")
+                    
+                    ids_option = 0
                     print("\nASI SE GUARDARON SUS DATOS:")
-                    for x, y in google_file_ids.items():
-                        print(f"\n{x}: {y}")
-                    option = input("LOS DATOS SON CORRECTOS? (SI/NO): ")
-                    if not option == "SI" and not option == "NO":
-                        option == "NO"
-                    if option == "NO":
-                        ids_option = 0
-                        print("\n1. Ingresar IDs de nuevo")
-                        print("2. Regresar al menú principal")
-                        while not check_input_range(1,2,ids_option):
-                            ids_option = input("Escoge una opción: ").strip()
-                            if ids_option == 2:
-                                break
-                            elif not ids_option == 1:
-                                print("Opción inválida.\n")
-                                break
+                    for unidad, ssheet_id in google_file_ids.items():
+                        print(f"\n{unidad}: {ssheet_id}")
+                    print("\n¿LOS DATOS SON CORRECTOS?")
+                    print("1. Si, continuar")
+                    print("2. No, ingresar IDs de nuevo")
+                    print("3. No, regresar al menú principal")
+                    while not check_input_range(1,3,ids_option):
+                        ids_option = input("Escoge una opción: ").strip()
+                    
+                    if ids_option == 3:
+                        break
+                    elif ids_option == 1 or ids_option == 2:
+                        continue
+                    else:
+                        print("Opción inválida.\n")
+                        break
             elif not format_option == 1:
                 print("Opción inválida.\n")
                 break
