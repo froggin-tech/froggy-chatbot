@@ -1,5 +1,5 @@
 #
-# Versión 0.4
+# Versión 0.5
 # Fecha: 15 de agosto de 2025
 #
 # Autor: Helena Ruiz Ramírez
@@ -53,10 +53,11 @@ while True:
             os.system('cls||clear')
             print("\n-------------------------------------\n")
             print("= CONVERSACIONES DE LIVECONNECT =")
-            print("1. Exportar una cantidad específica")
-            print("2. Exportar por mes (varias páginas)")
-            print("3. Regresar al menú principal")
-            while not check_input_range(1,3,convos_option):
+            print("1. Exporta una conversación específica")
+            print("2. Exportar una cantidad específica")
+            print("3. Exportar por mes (varias páginas)")
+            print("4. Regresar al menú principal")
+            while not check_input_range(1,4,convos_option):
                 convos_option = input("Escoge una opción: ").strip()
 
             convos_option = int(convos_option)
@@ -65,23 +66,27 @@ while True:
             ending_user_index = '' # ending_user_index: Contando desde 1, es la fila de la última conversación a traer
             full_pages = '' # full_pages: Número de páginas de conversaciones completas entre la primera y la última
 
-            if convos_option == 3:
+            if convos_option == 4:
                 break
             elif convos_option == 1:
+                while not check_input_range(1,99999999,starting_user_index):
+                    starting_user_index = input("\nID de la conversación en LC (Ej: 12345678): ").strip()
+                    total_convos_to_fetch = 1
+            elif convos_option == 2:
                 while not check_input_range(1,99999,starting_user_index):
                     starting_user_index = input("\nID de la fila de la primera conversación en LC (mín 1): ").strip()
                 while not check_input_type(total_convos_to_fetch):
                     total_convos_to_fetch = input("Total de conversaciones a jalar: ").strip()
-                starting_user_index = int(starting_user_index)
+                starting_user_index = int(starting_user_index) - 1
                 total_convos_to_fetch = int(total_convos_to_fetch)
-            elif convos_option == 2:
+            elif convos_option == 3:
                 while not check_input_range(1,100,starting_user_index):
                     starting_user_index = input("\nFila de la primera conversación en la página (1-100): ").strip()
                 while not check_input_range(1,100,ending_user_index):
                     ending_user_index = input("Fila de la última conversación en la página (1-100): ").strip()
                 while not check_input_type(full_pages):
                     full_pages = input("Páginas completas entre ambas conversaciones: ").strip()
-                starting_user_index = int(starting_user_index)
+                starting_user_index = int(starting_user_index) - 1
                 ending_user_index = int(ending_user_index)
                 full_pages = int(full_pages)
                 total_convos_to_fetch = (100 - starting_user_index) + (full_pages * 100) + ending_user_index
@@ -137,8 +142,10 @@ while True:
             os.system('cls||clear')
             print("\n-------------------\n")
             print("... PASO 1/3: GENERANDO TOKEN PARA AUTORIZAR LA CONEXIÓN A LIVECONNECT ...")
-            pull_conversations(total_convos_to_fetch, google_creds, starting_user_index - 1, format_option, google_file_ids)
+            pull_conversations(total_convos_to_fetch, google_creds, starting_user_index, convos_option, format_option, google_file_ids)
     else:
         print("Opción inválida.")
 
     os.system('cls||clear')
+
+    # 40150820
