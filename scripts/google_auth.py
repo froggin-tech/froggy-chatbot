@@ -1,6 +1,6 @@
 #
-# Versión 1.1
-# Fecha: 06 de agosto de 2025
+# Versión 1.2
+# Fecha: 07 de agosto de 2025
 #
 # Autor: Helena Ruiz Ramírez
 # Función: Autenticar credenciales de Google Cloud
@@ -14,10 +14,17 @@ from dotenv import load_dotenv
 def create_google_credentials():
     # Carga el archivo .env con los secretos
     load_dotenv()
-
-    # En este paso, se abrirá una pestaña pidiendo permiso para accesar a tu cuenta con la aplicación
     with open(os.environ.get('G_OAUTH', None)) as f:
         creds = json.load(f)
-    google_creds, authorized_user = gspread.oauth_from_dict(creds)
-    print("\nSe autorizó la conexión a Google\n")
+
+    # En este paso, se abrirá una pestaña pidiendo permiso para accesar a tu cuenta con la aplicación
+    print("... PIDIENDO PERMISOS A SU CUENTA DE GOOGLE ...")
+    try:
+        google_creds, authorized_user = gspread.oauth_from_dict(creds)
+    except Exception as e:
+        print("HUBO UN ERROR AL CONECTAR SU CUENTA")
+        print(f"{e}")
+        os.system("pause")
+        return
+    print("¡CONEXIÓN A GOOGLE CLOUD OBTENIDA!")
     return google_creds
