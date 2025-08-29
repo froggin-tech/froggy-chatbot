@@ -63,17 +63,33 @@ def identify_contact():
         pageGearToken = token_json_resp['PageGearToken']
         print("¡TOKEN DE API OBTENIDO!")
     
-    # Primero revisa si los datos recibidos continen la estructura correcta
+    # Primero revisa si los datos recibidos contienen la estructura correcta
     try:
         data = request.json
         if not data:
             return jsonify({"error": "No se proporcionaron datos"}), 400
         print("Callback recibido:", data)
         
+        contexto = "contexto de ejemplo"
+        sucursal = "sucursal de ejemplo"
+        texto_respuesta = "respuesta de ejemplo"
+        
+        sucursal = data.get('chat', {}).get('dinamicos', {}).get('dinamicovmoXo1', '').strip()
+        if not sucursal:
+            valor_canal = data.get('chat', {}).get('id_canal', '')
+            if valor_canal:
+                tag_sucursal = Canales.from_value(valor_canal).name
+                print(tag_sucursal)
+                sucursal = Sucursales.from_value(tag_sucursal).value
+                print(sucursal)
+            else:
+                print("Error al solicitar la sucursal / nombre del canal")
+
         # Ahora, extrae el id del contacto del mensaje entrante para revisar si tiene historial > 0
-        contact_id = data.get('inputs', {}).get('id_contacto')
-        chat_id = data.get('chat', {}).get('id').strip()
         historial = False
+        id_chatbot = 0
+        nombre_chatbot = ""
+        contact_id = data.get('inputs', {}).get('id_contacto')
         if contact_id:
             # Pasamos el ID del contacto del cual queremos consultar el historial
             # Este se obtiene del webhook lanzado al transferir la convo al equipo de chatbots
@@ -82,53 +98,52 @@ def identify_contact():
             contact_history_json_resp = get_liveconnect(history_endpoint, history_payload, pageGearToken)
             if 'status' in contact_history_json_resp and contact_history_json_resp['status'] > 0:
                 historial = True
+                id_chatbot = 53958
+                nombre_chatbot = "Franny Chatbot (Existentes)"
+                print("Historial encontrado - Contacto existente")
             else:
                 historial = False
-
-        valor_canal = data.get('chat', {}).get('id_canal', '')
-        sucursal = ""
-        if valor_canal:
-            tag_sucursal = Canales.from_value(valor_canal).name
-            print(tag_sucursal)
-            sucursal = Sucursales.from_value(tag_sucursal).value
-            print(sucursal)
-        else:
-            print("Error al solicitar la sucursal / nombre del canal")
+                id_chatbot = 53415
+                nombre_chatbot = "Franny Chatbot (Nuevos)"
+                print("Historial no encontrado - Contacto nuevo")
 
         if historial:
-            print("Historial encontrado - Contacto existente")
-            valor_contexto = data.get('inputs', {}).get('dinamicos', {}).get('dinamicoQBTVa1', '').strip()
-            contexto = "contexto de ejemplo"
-
+            texto_respuesta = "¡Hola de nuevo! Le atiende Franny, una asistente virtual para la sucursal "+sucursal+" de *Froggin English for Kids* ⭐🐸📚\n"
+            texto_respuesta += "\nEstoy aquí para contestar cualquier duda, ya sea por mensaje de texto o de voz, sobre nuestras divertidas clases de inglés para niños de *3 a 12 años* 🏫💚\n"
+            
+            valor_contexto = data.get('chat', {}).get('contacto', {}).get('dinamicos', {}).get('dinamicoQBTVa1', '').strip()
             if valor_contexto:
                 if valor_contexto == "":
                     print("Contexto vacio")
-                    texto_respuesta = "¡Hola otra vez!"
                 else:
-                    edit_endpoint = "/contacts/edt"
-                    edit_payload = {
-                        "id": contact_id,
-                        "dinamicos": {
-                            "dinamicovmoXo1": sucursal,
-                            "dinamicoQBTVa1": contexto
-                        },
-                        "id_chat": chat_id
-                    }
-                    edit_contact_json_resp = get_liveconnect(edit_endpoint, edit_payload, pageGearToken)
-                    if 'status' in edit_contact_json_resp and edit_contact_json_resp['status'] < 0:
-                        print(edit_contact_json_resp['status_message'])
-                        texto_respuesta = "¡Hola otra vez!"
-                    else:
-                        print("Se editó el usuario")
-                        texto_respuesta = "Es un gusto saludarle de nuevo. Permítame confirmar lo siguiente:\n"
-                        texto_respuesta+="- Le interesa la sucursal "+sucursal+"\n"
-                        texto_respuesta+="- "+contexto+"\n"
+                    print("Contexto encontrado: "+valor_contexto)
+                    contexto = valor_contexto
+
+                    texto_respuesta+= "\nPermítame confirmar los siguientes datos:\n"
+                    texto_respuesta+=contexto+"\n"
             else:
                 print("Error al obtener contexto del contacto")
-                texto_respuesta = "¡Hola otra vez!"
         else:
-            print("Historial no encontrado - Contacto nuevo")
-            texto_respuesta = "¡Bienvenido a Froggin! Usted está contactando a la sucursal "+sucursal
+            texto_respuesta = "¡Bienvenido! Le atiende Franny, una asistente virtual para la sucursal "+sucursal+" de *Froggin English for Kids* ⭐🐸📚\n"
+            texto_respuesta += "\nEstoy aquí para contestar cualquier duda, ya sea por mensaje de texto o de voz, sobre nuestras divertidas clases de inglés para niños de *3 a 12 años* 🏫💚\n"
+            
+            contexto = ""
+        
+        chat_id = data.get('chat', {}).get('id').strip()
+        edit_endpoint = "/contacts/edt"
+        edit_payload = {
+            "id": contact_id,
+            "dinamicos": {
+                "dinamicovmoXo1": sucursal,
+                "dinamicoQBTVa1": contexto
+            },
+            "id_chat": chat_id
+        }
+        edit_contact_json_resp = get_liveconnect(edit_endpoint, edit_payload, pageGearToken)
+        if 'status' in edit_contact_json_resp and edit_contact_json_resp['status'] < 0:
+            print(edit_contact_json_resp['status_message'])
+        else:
+            print("Se editó el usuario")
 
         # Esta es la respuesta que se regresa a LC. La variable 'respuesta' varia.
         response = {
@@ -139,6 +154,11 @@ def identify_contact():
                 {
                     "type": "sendText",
                     "text": texto_respuesta
+                },
+                {
+                    "type": "userDelegate",
+                    "id_user": id_chatbot,
+                    "name": nombre_chatbot
                 }
                 ]
             }

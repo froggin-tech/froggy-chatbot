@@ -18,7 +18,7 @@ class Canales(Enum):
     @classmethod
     def from_value(cls, value):
         for member in cls:
-            if value in member.value:
+            if str(value) in member.value:
                 return member
         return Canales.DEF
 
@@ -32,6 +32,6 @@ class Sucursales(Enum):
     @classmethod
     def from_value(cls, value):
         for member in cls:
-            if value in member.value:
+            if value == member.name:
                 return member
         return Sucursales.DEF
