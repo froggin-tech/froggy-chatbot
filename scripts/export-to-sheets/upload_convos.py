@@ -6,12 +6,11 @@
 # Función: Crear spreadsheets a partir de un .csv y colocarlos en un designado folder de Google Drive
 #           El archivo se crea con OAuth. Es necesario dar permisos de aplicación cada vez que se corre este script
 #
-from fileinput import filename
 import os
 import pandas as pd
 from dotenv import load_dotenv
-from enum_unidades import Unidades
 from format_convos import apply_formatting
+from enum_unidades import Unidades
 
 
 def upload_file_to_google(ssheet_name, csv_buffer, google_creds, system_message_rows, format_option, google_file_ids):

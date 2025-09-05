@@ -1,9 +1,10 @@
 #
-# Versión 0.1
-# Fecha: 26 de agosto de 2025
+# Versión 0.3
+# Fecha: 03 de septiembre de 2025
 #
 # Autores: Helena Ruiz Ramírez
-# Función: Enumerador de los canales en LiveConnect por ID. Se utiliza para asignar la sucursal del contacto.
+# Función: Enumeradores para los canales en LiveConnect por ID, las sucursales por etiqueta y el 
+#           ID del equipo correspondiente según el ID del canal.
 #
 from enum import Enum
 
@@ -37,13 +38,15 @@ class Sucursales(Enum):
                 return member
         return Sucursales.DEF
 
+
+# ID Canal = ID Equipo
 equipos_IDs = {
     115: 9089, # 02 Elite WA = 02 Elite
-    4124: 10094, # 02 Elite Facebook = 02 Elite
-    243: 4041, # 04 SanNicolas WA = 02 Elite
-    19026: 10096, # 04 SanNicolas Facebook = 02 Elite
-    735: 9091, # 05 Dominio WA = 02 Elite
-    19027: 10098, # 05 Dominio Facebook = 02 Elite
-    235: 9092, # 02 Escobedo WA = 02 Elite
-    19028: 10099 # 02 Escobedo Facebook = 02 Elite
+    4124: 10094, # 02 Elite Facebook = 02 Elite Facebook
+    243: 4041, # 04 SanNicolas WA = 04 SanNicolas
+    19026: 10096, # 04 SanNicolas Facebook = 04 SanNicolas Facebook
+    735: 9091, # 05 Dominio WA = 05 Dominio
+    19027: 10098, # 05 Dominio Facebook = 05 Dominio Facebook
+    235: 9092, # 06 Escobedo WA = 06 Escobedo
+    19028: 10099 # 06 Escobedo Facebook = 06 Escobedo Facebook
 }
