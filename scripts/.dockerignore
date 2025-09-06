@@ -1,0 +1,29 @@
+# Ignorar venv local (virtual environment)
+scripts/.venv
+
+# Ignorar configuraciones locales
+scripts/.vscode
+
+# Ignorar código irrelevante al app de Flask
+scripts/.vscode
+scripts/export-to-sheets
+
+# Ignorar bytecode
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Ignorar credenciales
+secrets/*
+.env
+.env.example
+
+# Ignorar git
+.git
+.gitignore
+.gitattributes
+
+# Ignorar docs que no se usan en la imagen
+docs/
+README.md

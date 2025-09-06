@@ -217,4 +217,5 @@ def identify_contact():
 
 
 if __name__ == "__main__":
-    app.run(port=5000, debug=True)
+    # Instrucciones para desplegar la app en un servidor WSGI usando Gunicorn
+    app.run(host="127.0.0.1", port=int(os.environ.get("PORT", 8080)), debug=True)
