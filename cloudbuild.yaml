@@ -22,6 +22,10 @@ steps:
     - 'managed'
     - '--allow-unauthenticated' # Permite el acceso público al servicio
 
+# Indica que utilise el mecanismo estándar para almacenar los registros de builds
+options:
+  logging: CLOUD_LOGGING_ONLY
+
 # Almacena la imagen en el registro
 images:
 - 'gcr.io/$PROJECT_ID/server-callback:latest'
