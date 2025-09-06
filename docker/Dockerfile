@@ -22,7 +22,7 @@ COPY scripts/utils/liveconnect_api.py utils/
 EXPOSE 8080
 
 # Definir la variable de entorno para el puerto
-ENV PORT 8080
+ENV PORT=8080
 
 # Ejecutar la aplicación cuando el contenedor se inicie
 CMD ["gunicorn", "--bind", "0.0.0.0:8080", "callbacks.check_history:app"]

@@ -10,7 +10,7 @@ from flask import Flask, request, jsonify
 from openai import OpenAI
 import pandas as pd
 import os
-from enum_canales import Canales, Sucursales, equipos_IDs
+from .enum_canales import Canales, Sucursales, equipos_IDs
 import sys
 from pathlib import Path
 sys.path.append(str(Path(__file__).resolve().parent.parent))
