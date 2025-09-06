@@ -63,7 +63,8 @@ def summarize_convo(convo_table, contact_name):
 @app.route("/", methods=["POST"])
 def identify_contact():
     # Protege al servidor de requests no deseados al verificar el secret key
-    incoming_secret = request.headers.get("secret")
+    # Primero checa en los headers, y si no, en los argumentos del URL
+    incoming_secret = request.headers.get("secret") or request.args.get("secret")
     my_secret = os.environ.get('LC_WEBHOOK_SECRET', None)
     if incoming_secret != my_secret:
         print(f"[WARNING] Secret inválido recibido: {incoming_secret}")
