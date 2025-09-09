@@ -1,14 +1,15 @@
 #
-# Versión 0.3
-# Fecha: 04 de septiembre de 2025
+# Versión 0.4
+# Fecha: 08 de septiembre de 2025
 #
 # Autor: Helena Ruiz Ramírez
 # Función: Determina el mensaje de bienvenida de una conversación entrante. También redirige a un chatbot o equipo
-#           según el historial del usuario, y genera un resumen de las conversaciones previas.
+#           según el historial del usuario y la hora del día, y genera un resumen de las conversaciones previas.
 #
 from flask import Flask, request, jsonify
 from openai import OpenAI
-import pandas as pd
+import datetime
+import pytz
 import os
 from .enum_canales import Canales, Sucursales, equipos_IDs
 import sys
@@ -58,6 +59,35 @@ def summarize_convo(convo_table, contact_name):
         max_tokens=150
     )
     return resp.choices[0].message.content.strip()
+
+
+# Determina si el callback llego dentro del horario para atender los chatbots
+def is_within_schedule():
+    # Define la zona horaria de México
+    mexico_tz = pytz.timezone('America/Monterrey')
+    
+    # Obtiene el tiempo en UTC (Tiempo Universal Coordinado) y lo convierte
+    now_utc = datetime.now(pytz.utc)
+    now_mexico = now_utc.astimezone(mexico_tz)
+    
+    # Obtiene el día actual de la semana (Lunes=0, Domingo=6) y la hora
+    current_day = now_mexico.weekday()
+    current_hour = now_mexico.hour
+    current_min = now_mexico.minute
+    
+    # Checa si el resultado cae dentro del horario establecido
+    if 0 <= current_day <= 4: # De lunes a viernes
+        if 10 <= current_hour < 13: # 10:00 AM y 12:59 PM
+            if current_hour == 10 and current_min < 30: # No incluye antes de las 10:30 AM
+                return False
+            else:
+                return True
+        elif 15 == current_hour: # 03 PM
+            if 10 <= current_min <= 45: #Entre 03:10 PM y 03:45 PM
+                return True
+            
+    # Cualquier otra hora no es válida
+    return False
 
 
 @app.route("/", methods=["POST"])
@@ -117,91 +147,106 @@ def identify_contact():
                 historial = False
                 print("Historial no encontrado - Contacto nuevo")
 
-        if historial:
-            tag_list = data.get('chat', {}).get('etiquetas', {})
-            if "74937" in tag_list.values():
-                # Si tiene historial y también tiene la etiqueta de 'Fase Chatbot', se redirige al chatbot Existentes
-                texto_respuesta = "¡Hola de nuevo! Le atiende Franny, una asistente virtual para la sucursal *"+sucursal+"* de *Froggin English for Kids* ⭐🐸📚\n"
+        # Revisa si la conversacion entrante esta dentro del horario de atencion
+        if is_within_schedule():
+            # --- LOGICA ONLINE: Delegar a Chatbot ---
+            if historial:
+                tag_list = data.get('chat', {}).get('etiquetas', {})
+                if "74937" in tag_list.values():
+                    # Si tiene historial y también tiene la etiqueta de 'Fase Chatbot', se redirige al chatbot Existentes
+                    texto_respuesta = "¡Hola de nuevo! Le atiende Franny, una asistente virtual para la sucursal *"+sucursal+"* de *Froggin English for Kids* ⭐🐸📚\n"
+                    texto_respuesta += "\nEstoy aquí para contestar cualquier duda, ya sea por mensaje de texto o de voz, sobre nuestras divertidas clases de inglés para niños de *3 a 12 años* 🏫💚\n"
+
+                    # Manda a generar un resumen de hasta los últimos 25 mensajes con el contacto
+                    # Este contexto se manda como mensaje, y más adelante se guarda en el campo dinámico 'Contexto'
+                    contact_name = data.get('inputs', {}).get('nombre')
+                    convo_table = group_convo(pageGearToken, contact_ID, contact_name, message_limit=25)
+                    contexto = summarize_convo(convo_table, contact_name)
+                    print("Contexto generado: "+contexto)
+
+                    # Termina el mensaje de bienvenida y lo adjunta a la acción 'sendText'
+                    texto_respuesta += "\n🤖 _Actualmente me encuentro bajo entrenamiento. Le agradezco su paciencia si me llego a equivocar_ 🙏"
+                    acciones.append({
+                        "type": "sendText",
+                        "text": texto_respuesta
+                    })
+
+                    # Especifica el id del usuario a transferir la conversación, en este caso es un chatbot
+                    delegate_user_id = 53958
+                    delegate_user_name = "Franny Chatbot (Existentes)"
+                    acciones.append({
+                        "type": "userDelegate",
+                        "id_user": delegate_user_id,
+                        "name": delegate_user_name
+                    })
+
+                    # Actualiza los campos dinámicos de Sucursal y Contexto del contacto con un método API
+                    chat_ID = data.get('chat', {}).get('id').strip()
+                    edit_payload = {
+                        "id": contact_ID,
+                        "dinamicos": {
+                            "dinamicovmoXo1": sucursal,
+                            "dinamicoQBTVa1": contexto
+                        },
+                        "id_chat": chat_ID
+                    }
+                    edit_contact(edit_payload, pageGearToken)
+                else:
+                    # Si tiene historial pero no tiene la etiqueta de 'Fase Chatbot', se redirige al equipo de la sucursal correspondiente
+                    valor_canal = data.get('chat', {}).get('id_canal')
+                    delegate_team_id = equipos_IDs.get(valor_canal, 1959) # Si no existe, se asigna a Atención Virtual (ID 1959)
+                    print(delegate_team_id)
+                    # Especifica el id del equipo a transferir la conversación, en este caso es el de la sucursal
+                    acciones.append({
+                        "type": "teamDelegate",
+                        "id_team": delegate_team_id
+                    })
+            else:
+                # Si no tiene historial, significa que es nuevo y se le da la bienvenida por primera vez
+                texto_respuesta = "¡Bienvenido! Le atiende Franny, una asistente virtual para la sucursal *"+sucursal+"* de *Froggin English for Kids* ⭐🐸📚\n"
                 texto_respuesta += "\nEstoy aquí para contestar cualquier duda, ya sea por mensaje de texto o de voz, sobre nuestras divertidas clases de inglés para niños de *3 a 12 años* 🏫💚\n"
-
-                # Manda a generar un resumen de hasta los últimos 25 mensajes con el contacto
-                # Este contexto se manda como mensaje, y más adelante se guarda en el campo dinámico 'Contexto'
-                contact_name = data.get('inputs', {}).get('nombre')
-                convo_table = group_convo(pageGearToken, contact_ID, contact_name, message_limit=25)
-                contexto = summarize_convo(convo_table, contact_name)
-                print("Contexto generado: "+contexto)
-                texto_respuesta+= "\nPermítame confirmar los siguientes datos que nos compartió previamente:\n"
-                texto_respuesta+=contexto+"\n"
-
-                # Termina el mensaje de bienvenida y lo adjunta a la acción 'sendText'
                 texto_respuesta += "\n🤖 _Actualmente me encuentro bajo entrenamiento. Le agradezco su paciencia si me llego a equivocar_ 🙏"
                 acciones.append({
                     "type": "sendText",
                     "text": texto_respuesta
                 })
 
-                # Especifica el id del usuario a transferir la conversación, en este caso es un chatbot
-                delegate_user_id = 53958 # Franny Chatbot (Existentes)
+                # Como es nuevo, le asigna la etiqueta de 'Fase Chatbot' (que tiene el ID 74937)
                 acciones.append({
-                    "type": "userDelegate",
-                    "id_user": delegate_user_id
+                    "type": "addTag",
+                    "id_tag": 74937
                 })
 
-                # Actualiza los campos dinámicos de Sucursal y Contexto del contacto con un método API
+                # Especifica el id del usuario a transferir la conversación, en este caso es un chatbot
+                delegate_user_id = 53415
+                delegate_user_name = "Franny Chatbot (Nuevos)"
+                acciones.append({
+                    "type": "userDelegate",
+                    "id_user": delegate_user_id,
+                    "name": delegate_user_name
+                })
+
+                # Actualiza el campo dinámico de Sucursal del contacto con un método API
                 chat_ID = data.get('chat', {}).get('id').strip()
                 edit_payload = {
                     "id": contact_ID,
                     "dinamicos": {
-                        "dinamicovmoXo1": sucursal,
-                        "dinamicoQBTVa1": contexto
+                        "dinamicovmoXo1": sucursal
                     },
                     "id_chat": chat_ID
                 }
                 edit_contact(edit_payload, pageGearToken)
-            else:
-                # Si tiene historial pero no tiene la etiqueta de 'Fase Chatbot', se redirige al equipo de la sucursal correspondiente
-                valor_canal = data.get('chat', {}).get('id_canal')
-                delegate_team_id = equipos_IDs.get(valor_canal, 1959) # Si no existe, se asigna a Atención Virtual (ID 1959)
-                print(delegate_team_id)
-                # Especifica el id del equipo a transferir la conversación, en este caso es el de la sucursal
-                acciones.append({
-                    "type": "teamDelegate",
-                    "id_team": delegate_team_id
-                })
         else:
-            # Si no tiene historial, significa que es bueno y se le da la bienvenida por primera vez
-            texto_respuesta = "¡Bienvenido! Le atiende Franny, una asistente virtual para la sucursal *"+sucursal+"* de *Froggin English for Kids* ⭐🐸📚\n"
-            texto_respuesta += "\nEstoy aquí para contestar cualquier duda, ya sea por mensaje de texto o de voz, sobre nuestras divertidas clases de inglés para niños de *3 a 12 años* 🏫💚\n"
-            texto_respuesta += "\n🤖 _Actualmente me encuentro bajo entrenamiento. Le agradezco su paciencia si me llego a equivocar_ 🙏"
+            # --- LOGICA OFFLINE: Delegar a Equipo Humano ---
+            valor_canal = data.get('chat', {}).get('id_canal')
+            delegate_team_id = equipos_IDs.get(valor_canal, 1959) # Si no existe, se asigna a Atención Virtual (ID 1959)
+            # Especifica el id del equipo a transferir la conversación, en este caso es el de la sucursal
             acciones.append({
-                "type": "sendText",
-                "text": texto_respuesta
+                "type": "teamDelegate",
+                "id_team": delegate_team_id
             })
+            print("Horario OFFLINE, delegando a la sucursal")
 
-            # Como es nuevo, le asigna la etiqueta de 'Fase Chatbot' (que tiene el ID 74937)
-            acciones.append({
-                "type": "addTag",
-                "id_tag": 74937
-            })
-
-            # Especifica el id del usuario a transferir la conversación, en este caso es un chatbot
-            delegate_user_id = 53415 # Franny Chatbot (Nuevos)
-            acciones.append({
-                "type": "userDelegate",
-                "id_user": delegate_user_id
-            })
-
-            # Actualiza el campo dinámico de Sucursal del contacto con un método API
-            chat_ID = data.get('chat', {}).get('id').strip()
-            edit_payload = {
-                "id": contact_ID,
-                "dinamicos": {
-                    "dinamicovmoXo1": sucursal
-                },
-                "id_chat": chat_ID
-            }
-            edit_contact(edit_payload, pageGearToken)
-        
         # Esta es la respuesta que se regresa a LC con las acciones a realizar (mandar msj, agregar etiqueta, delegar a chatbot/equipo)
         response = {
             "status": 1,
