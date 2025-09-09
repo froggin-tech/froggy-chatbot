@@ -15,7 +15,7 @@ RUN mkdir -p callbacks utils
 
 # Copiar los archivos específicos de la aplicación a sus respectivos directorios
 COPY scripts/callbacks/check_history.py callbacks/
-COPY scripts/callbacks/enum_canales.py callbacks/
+COPY scripts/callbacks/enum_liveconnect.py callbacks/
 COPY scripts/utils/liveconnect_api.py utils/
 
 # Hacer que el puerto 8080 esté disponible

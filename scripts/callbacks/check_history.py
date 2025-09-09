@@ -1,26 +1,58 @@
 #
-# Versión 0.4
-# Fecha: 08 de septiembre de 2025
+# Versión 0.5
+# Fecha: 09 de septiembre de 2025
 #
 # Autor: Helena Ruiz Ramírez
-# Función: Determina el mensaje de bienvenida de una conversación entrante. También redirige a un chatbot o equipo
-#           según el historial del usuario y la hora del día, y genera un resumen de las conversaciones previas.
+# Función: Determina el mensaje de bienvenida y las etiquetas de una conversación entrante. También redirige a un chatbot
+#           o equipo según el historial del usuario y la hora del día, y genera un resumen de las conversaciones previas.
 #
 from flask import Flask, request, jsonify
 from openai import OpenAI
 from datetime import datetime, timezone
 import pytz
 import os
-from .enum_canales import Canales, Sucursales, equipos_IDs
 import sys
 from pathlib import Path
 sys.path.append(str(Path(__file__).resolve().parent.parent))
+from .enum_liveconnect import Canales, Sucursales, equipos_IDs, EtiquetaAtender, tag_IDs, user_IDs
 from utils.liveconnect_api import get_token, get_liveconnect, edit_contact, group_convo
 
 
 app = Flask(__name__)
 
 
+# Determina si el callback llego dentro del horario para atender los chatbots
+def is_within_schedule():
+    # Define la zona horaria de México
+    mexico_tz = pytz.timezone('America/Monterrey')
+    
+    # Obtiene el tiempo en UTC (Tiempo Universal Coordinado) y lo convierte
+    now_utc = datetime.now(timezone.utc)
+    now_mexico = now_utc.astimezone(mexico_tz)
+    
+    # Obtiene el día actual de la semana (Lunes=0, Domingo=6) y la hora
+    current_day = now_mexico.weekday()
+    current_hour = now_mexico.hour
+    current_min = now_mexico.minute
+    
+    # Checa si el resultado cae dentro del horario establecido
+    if 0 <= current_day <= 4: # De lunes a viernes
+        if 10 <= current_hour < 14: # 10:00 AM y 01:59 PM
+            if current_hour == 10 and current_min < 30: # No incluye antes de las 10:30 AM
+                return False
+            elif current_hour == 13 and current_min >= 30: # No incluye después de la 01:29 PM
+                return False
+            else:
+                return True
+        elif 15 == current_hour: # 03 PM
+            if 10 <= current_min <= 45: #Entre 03:10 PM y 03:45 PM
+                return True
+            
+    # Cualquier otra hora no es válida
+    return False
+
+
+# Genera el contexto de la conversación para referencia de las ADM
 def summarize_convo(convo_table, contact_name):
     # Valida el API key para llamar al cliente de operaciones OpenAI
     client = OpenAI(api_key = os.environ.get('GPT_KEY', None))
@@ -61,35 +93,23 @@ def summarize_convo(convo_table, contact_name):
     return resp.choices[0].message.content.strip()
 
 
-# Determina si el callback llego dentro del horario para atender los chatbots
-def is_within_schedule():
-    # Define la zona horaria de México
-    mexico_tz = pytz.timezone('America/Monterrey')
-    
-    # Obtiene el tiempo en UTC (Tiempo Universal Coordinado) y lo convierte
-    now_utc = datetime.now(timezone.utc)
-    now_mexico = now_utc.astimezone(mexico_tz)
-    
-    # Obtiene el día actual de la semana (Lunes=0, Domingo=6) y la hora
-    current_day = now_mexico.weekday()
-    current_hour = now_mexico.hour
-    current_min = now_mexico.minute
-    
-    # Checa si el resultado cae dentro del horario establecido
-    if 0 <= current_day <= 4: # De lunes a viernes
-        if 10 <= current_hour < 14: # 10:00 AM y 01:59 PM
-            if current_hour == 10 and current_min < 30: # No incluye antes de las 10:30 AM
-                return False
-            elif current_hour == 13 and current_min >= 30: # No incluye después de la 01:29 PM
-                return False
-            else:
-                return True
-        elif 15 == current_hour: # 03 PM
-            if 10 <= current_min <= 45: #Entre 03:10 PM y 03:45 PM
-                return True
-            
-    # Cualquier otra hora no es válida
-    return False
+# Transferir al equipo de la sucursal en horario offline o cuando el contacto ya pasó la fase de CLMU
+def team_delegate(data, acciones):
+    # Especifica el id del equipo a transferir la conversación, en este caso es el de la sucursal
+    valor_canal = data.get('chat', {}).get('id_canal')
+    acciones.append({
+        "type": "teamDelegate",
+        "id_team": int(equipos_IDs.get(str(valor_canal), "1959")) # Si no existe, se asigna a Atención Virtual (ID 1959)
+    })
+    print("Team delegate")
+
+    # Como va directo a la sucursal, se le asigna la etiqueta para poder atenderlo después
+    tag_sucursal = Canales.from_value(valor_canal).name
+    acciones.append({
+        "type": "addTag",
+        "id_tag": int(EtiquetaAtender.from_value(tag_sucursal).value)
+    })
+    print(EtiquetaAtender.from_value(tag_sucursal).value)
 
 
 @app.route("/", methods=["POST"])
@@ -120,41 +140,60 @@ def identify_contact():
         sucursal = "sucursal de ejemplo" # Para después guardar la sucursal del contacto
         texto_respuesta = "respuesta de ejemplo" # Para después guardar el texto de bienvenida a generar
         acciones = [] # Para después agregar las acciones a realizar en LC
-        
-        # Checa si se ha definido la sucursal. Si no, la genera según el canal del mensaje entrante
-        sucursal = data.get('chat', {}).get('contacto', {}).get('dinamicos', {}).get('dinamicovmoXo1', '').strip()
-        if sucursal is None or sucursal == '':
-            valor_canal = data.get('chat', {}).get('id_canal')
-            if valor_canal:
-                tag_sucursal = Canales.from_value(valor_canal).name
-                print(tag_sucursal)
-                sucursal = Sucursales.from_value(tag_sucursal).value
-                print(sucursal)
-            else:
-                print("Error al solicitar la sucursal / nombre del canal")
 
-        # Ahora, extrae el id del contacto del mensaje entrante para revisar si tiene historial > 0
-        historial = False
-        contact_ID = data.get('inputs', {}).get('id_contacto')
-        if contact_ID:
-            # Pasamos el ID del contacto del cual queremos consultar el historial
-            # Este se obtiene del webhook lanzado al transferir la convo al chatbot Franny Transfer en LC (Equipo Froggy)
-            history_endpoint = "history/conversations"
-            history_payload = { "id_contacto": contact_ID }
-            contact_history_json_resp = get_liveconnect(history_endpoint, history_payload, pageGearToken)
-            if 'status' in contact_history_json_resp and contact_history_json_resp['status'] > 0:
-                historial = True
-                print("Historial encontrado - Contacto existente")
-            else:
-                historial = False
-                print("Historial no encontrado - Contacto nuevo")
+        # Si el callback contiene el mensaje entrante, checa si viene de una campaña para asignar la etiqueta
+        mensaje = data.get("inputs", {}).get("mensaje_inicial")
+        if mensaje:  # si existe y no es None
+            mensaje_lower = mensaje.lower()
+            if "fb.me" in mensaje_lower:
+                acciones.append({
+                    "type": "addTag",
+                    "id_tag": int(tag_IDs["facebook"])
+                })
+                print("Campaña facebook")
+            elif "instagram.com" in mensaje_lower:
+                acciones.append({
+                    "type": "addTag",
+                    "id_tag": int(tag_IDs["instagram"])
+                })
+                print("Campaña instagram")
 
         # Revisa si la conversacion entrante esta dentro del horario de atencion
         if is_within_schedule():
             # --- LOGICA ONLINE: Delegar a Chatbot ---
+            print("Horario ONLINE, ejecutando lógica de historial")
+
+            # Checa si se ha definido la sucursal. Si no, la genera según el canal del mensaje entrante
+            sucursal = data.get('chat', {}).get('contacto', {}).get('dinamicos', {}).get('dinamicovmoXo1', '').strip()
+            if sucursal is None or sucursal == '':
+                valor_canal = data.get('chat', {}).get('id_canal')
+                if valor_canal:
+                    tag_sucursal = Canales.from_value(valor_canal).name
+                    print(tag_sucursal)
+                    sucursal = Sucursales.from_value(tag_sucursal).value
+                    print(sucursal)
+                else:
+                    print("Error al solicitar la sucursal / nombre del canal")
+
+            # Ahora, extrae el id del contacto del mensaje entrante para revisar si tiene historial > 0
+            historial = False
+            contact_ID = data.get('inputs', {}).get('id_contacto')
+            if contact_ID:
+                # Pasamos el ID del contacto del cual queremos consultar el historial
+                # Este se obtiene del webhook lanzado al transferir la convo al chatbot Franny Transfer en LC (Equipo Froggy)
+                history_endpoint = "history/conversations"
+                history_payload = { "id_contacto": contact_ID }
+                contact_history_json_resp = get_liveconnect(history_endpoint, history_payload, pageGearToken)
+                if 'status' in contact_history_json_resp and contact_history_json_resp['status'] > 0:
+                    historial = True
+                    print("Historial encontrado - Contacto existente")
+                else:
+                    historial = False
+                    print("Historial no encontrado - Contacto nuevo")
+
             if historial:
                 tag_list = data.get('chat', {}).get('etiquetas', {})
-                if "74937" in tag_list.values():
+                if int(tag_IDs["fase chatbot"]) in tag_list.values():
                     # Si tiene historial y también tiene la etiqueta de 'Fase Chatbot', se redirige al chatbot Existentes
                     texto_respuesta = "¡Hola de nuevo! Le atiende Franny, una asistente virtual para la sucursal *"+sucursal+"* de *Froggin English for Kids* ⭐🐸📚\n"
                     texto_respuesta += "\nEstoy aquí para contestar cualquier duda, ya sea por mensaje de texto o de voz, sobre nuestras divertidas clases de inglés para niños de *3 a 12 años* 🏫💚\n"
@@ -174,12 +213,10 @@ def identify_contact():
                     })
 
                     # Especifica el id del usuario a transferir la conversación, en este caso es un chatbot
-                    delegate_user_id = 53958
-                    delegate_user_name = "Franny Chatbot (Existentes)"
                     acciones.append({
                         "type": "userDelegate",
-                        "id_user": delegate_user_id,
-                        "name": delegate_user_name
+                        "id_user": int(user_IDs["existentes"]['id']),
+                        "name": user_IDs["existentes"]['name']
                     })
 
                     # Actualiza los campos dinámicos de Sucursal y Contexto del contacto con un método API
@@ -195,14 +232,7 @@ def identify_contact():
                     edit_contact(edit_payload, pageGearToken)
                 else:
                     # Si tiene historial pero no tiene la etiqueta de 'Fase Chatbot', se redirige al equipo de la sucursal correspondiente
-                    valor_canal = data.get('chat', {}).get('id_canal')
-                    delegate_team_id = equipos_IDs.get(valor_canal, 1959) # Si no existe, se asigna a Atención Virtual (ID 1959)
-                    print(delegate_team_id)
-                    # Especifica el id del equipo a transferir la conversación, en este caso es el de la sucursal
-                    acciones.append({
-                        "type": "teamDelegate",
-                        "id_team": delegate_team_id
-                    })
+                    team_delegate(data, acciones)
             else:
                 # Si no tiene historial, significa que es nuevo y se le da la bienvenida por primera vez
                 texto_respuesta = "¡Bienvenido! Le atiende Franny, una asistente virtual para la sucursal *"+sucursal+"* de *Froggin English for Kids* ⭐🐸📚\n"
@@ -213,19 +243,17 @@ def identify_contact():
                     "text": texto_respuesta
                 })
 
-                # Como es nuevo, le asigna la etiqueta de 'Fase Chatbot' (que tiene el ID 74937)
+                # Como es nuevo, le asigna la etiqueta de 'Fase Chatbot' (el ID está en el dict "tag_IDs" definido en enum_liveconnect.py)
                 acciones.append({
                     "type": "addTag",
-                    "id_tag": 74937
+                    "id_tag": int(tag_IDs["fase chatbot"])
                 })
 
                 # Especifica el id del usuario a transferir la conversación, en este caso es un chatbot
-                delegate_user_id = 53415
-                delegate_user_name = "Franny Chatbot (Nuevos)"
                 acciones.append({
                     "type": "userDelegate",
-                    "id_user": delegate_user_id,
-                    "name": delegate_user_name
+                    "id_user": int(user_IDs["nuevos"]['id']),
+                    "name": user_IDs["nuevos"]['name']
                 })
 
                 # Actualiza el campo dinámico de Sucursal del contacto con un método API
@@ -240,14 +268,8 @@ def identify_contact():
                 edit_contact(edit_payload, pageGearToken)
         else:
             # --- LOGICA OFFLINE: Delegar a Equipo Humano ---
-            valor_canal = data.get('chat', {}).get('id_canal')
-            delegate_team_id = equipos_IDs.get(valor_canal, 1959) # Si no existe, se asigna a Atención Virtual (ID 1959)
-            # Especifica el id del equipo a transferir la conversación, en este caso es el de la sucursal
-            acciones.append({
-                "type": "teamDelegate",
-                "id_team": delegate_team_id
-            })
             print("Horario OFFLINE, delegando a la sucursal")
+            team_delegate(data, acciones)
 
         # Esta es la respuesta que se regresa a LC con las acciones a realizar (mandar msj, agregar etiqueta, delegar a chatbot/equipo)
         response = {
