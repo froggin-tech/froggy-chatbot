@@ -8,7 +8,7 @@
 #
 from flask import Flask, request, jsonify
 from openai import OpenAI
-import datetime
+from datetime import datetime, timezone
 import pytz
 import os
 from .enum_canales import Canales, Sucursales, equipos_IDs
@@ -67,7 +67,7 @@ def is_within_schedule():
     mexico_tz = pytz.timezone('America/Monterrey')
     
     # Obtiene el tiempo en UTC (Tiempo Universal Coordinado) y lo convierte
-    now_utc = datetime.now(pytz.utc)
+    now_utc = datetime.now(timezone.utc)
     now_mexico = now_utc.astimezone(mexico_tz)
     
     # Obtiene el día actual de la semana (Lunes=0, Domingo=6) y la hora
@@ -77,8 +77,10 @@ def is_within_schedule():
     
     # Checa si el resultado cae dentro del horario establecido
     if 0 <= current_day <= 4: # De lunes a viernes
-        if 10 <= current_hour < 13: # 10:00 AM y 12:59 PM
+        if 10 <= current_hour < 14: # 10:00 AM y 01:59 PM
             if current_hour == 10 and current_min < 30: # No incluye antes de las 10:30 AM
+                return False
+            elif current_hour == 13 and current_min >= 30: # No incluye después de la 01:29 PM
                 return False
             else:
                 return True
