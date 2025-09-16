@@ -1,6 +1,6 @@
 #
-# Versión 0.3
-# Fecha: 03 de septiembre de 2025
+# Versión 0.4
+# Fecha: 15 de septiembre de 2025
 #
 # Autores: Helena Ruiz Ramírez
 # Función: Enumeradores y diccionarios para los canales en LiveConnect por ID, las sucursales por etiqueta, el ID
@@ -74,7 +74,8 @@ class EtiquetaAtender(Enum):
 tag_IDs = {
     "facebook": "50863", #  FB campaña
     "instagram": "50862", #  IG campaña
-    "fase chatbot": "74937" # Fase Chatbot
+    "fase chatbot": "74937", # Fase Chatbot
+    "live": "75792" # !! EN VIVO
 }
 
 

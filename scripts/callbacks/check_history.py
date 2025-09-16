@@ -1,6 +1,6 @@
 #
-# Versión 0.5
-# Fecha: 09 de septiembre de 2025
+# Versión 0.6
+# Fecha: 15 de septiembre de 2025
 #
 # Autor: Helena Ruiz Ramírez
 # Función: Determina el mensaje de bienvenida y las etiquetas de una conversación entrante. También redirige a un chatbot
@@ -219,6 +219,13 @@ def identify_contact():
                         "name": user_IDs["existentes"]['name']
                     })
 
+                    # Como lo va a atender el bot, le asigna la etiqueta '!! EN VIVO'
+                    tag_sucursal = Canales.from_value(valor_canal).name
+                    acciones.append({
+                        "type": "addTag",
+                        "id_tag": int(tag_IDs["live"])
+                    })
+
                     # Actualiza los campos dinámicos de Sucursal y Contexto del contacto con un método API
                     chat_ID = data.get('chat', {}).get('id').strip()
                     edit_payload = {
@@ -247,6 +254,13 @@ def identify_contact():
                 acciones.append({
                     "type": "addTag",
                     "id_tag": int(tag_IDs["fase chatbot"])
+                })
+
+                # Como lo va a atender el bot, le asigna la etiqueta '!! EN VIVO'
+                tag_sucursal = Canales.from_value(valor_canal).name
+                acciones.append({
+                    "type": "addTag",
+                    "id_tag": int(tag_IDs["live"])
                 })
 
                 # Especifica el id del usuario a transferir la conversación, en este caso es un chatbot
