@@ -36,7 +36,7 @@ def get_token():
         return response_json
 
 
-# Función para consultar historial de un contacto
+# Función para hacer un API request a LiveConnect. Varía según el endpoint y payload
 def get_liveconnect(endpoint, payload, pageGearToken):
     headers = {
         "Content-Type": "application/json",
@@ -72,7 +72,7 @@ def edit_contact(payload, pageGearToken):
 
 
 # Cambia los IDs por los nombres de los usuarios e indica cuales son de parte del sistema
-def switch_contact_ids(dataframe, participants, token):
+def switch_contact_ids(dataframe, participants, pageGearToken):
     for x in dataframe.index:
         user_id = int(dataframe.loc[x, 'Usuario'])
         if user_id == 0:
@@ -83,7 +83,7 @@ def switch_contact_ids(dataframe, participants, token):
             except:
                 # Si detecta un usuario que LC no registró como participante, lo busca externamente
                 user_payload = {"id": user_id}
-                user_json_resp = get_liveconnect("users/get", user_payload, token)
+                user_json_resp = get_liveconnect("users/get", user_payload, pageGearToken)
                 if user_json_resp:
                     try:
                         dataframe.loc[x, 'Usuario'] = user_json_resp['data']['nombre']

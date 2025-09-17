@@ -220,7 +220,6 @@ def identify_contact():
                     })
 
                     # Como lo va a atender el bot, le asigna la etiqueta '!! EN VIVO'
-                    tag_sucursal = Canales.from_value(valor_canal).name
                     acciones.append({
                         "type": "addTag",
                         "id_tag": int(tag_IDs["live"])
@@ -257,7 +256,6 @@ def identify_contact():
                 })
 
                 # Como lo va a atender el bot, le asigna la etiqueta '!! EN VIVO'
-                tag_sucursal = Canales.from_value(valor_canal).name
                 acciones.append({
                     "type": "addTag",
                     "id_tag": int(tag_IDs["live"])
