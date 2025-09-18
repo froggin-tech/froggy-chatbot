@@ -1,28 +1,43 @@
 #
-# Versión 0.4
-# Fecha: 15 de agosto de 2025
+# Versión 1.0
+# Fecha: 18 de agosto de 2025
 #
 # Autores: Helena Ruiz Ramírez, Pablo Andrés Ruiz Ramírez
 # Función: Crear spreadsheets a partir de un .csv y colocarlos en un designado folder de Google Drive
 #           El archivo se crea con OAuth. Es necesario dar permisos de aplicación cada vez que se corre este script
 #
+import gspread
 import os
 import pandas as pd
+import streamlit as st
 from dotenv import load_dotenv
 from format_convos import apply_formatting
 from enum_unidades import Unidades
 
 
-def upload_file_to_google(ssheet_name, csv_buffer, google_creds, system_message_rows, format_option, google_file_ids):
+# Usa HTML para crear un contenedor que automáticamente scrollea hacia abajo
+# Agrupa los logs (texto debug) que van saliendo en un solo string, con un breakline entre cada uno
+# Luego, usa JavaScript para asignar que el "tope" del scroll sea la altura, osea hasta el final
+# Por último, traduce el string a formato Markdown para visualizar en el app de streamlit
+def update_logs(logs, log_container, new_log):
+    logs.insert(0, new_log)
+    log_html = f"""
+    <div id="log-container" style="height: 180px; overflow-y: scroll; border: 1px solid #ccc; padding: 10px; border-radius: 5px; margin-bottom: 1em;">
+        {'<br>'.join(logs)}
+    </div>
+    """
+    log_container.markdown(log_html, unsafe_allow_html=True)
+
+
+# Determina si hay que crear archivos/spreadsheets o crear pestañas/hojas según la solicitud del usuario
+def upload_file_to_google(ssheet_name, csv_buffer, google_creds, system_message_rows, format_option, google_file_ids, logs, log_container):
     # Guarda los datos del csv buffer en una tabla para un spreadsheet
     try:
         csv_buffer.seek(0)
         df = pd.read_csv(csv_buffer, na_filter=False)
     except Exception as e:
-        print(f"Hubo un error al subir la conversación de '{ssheet_name}' a Google Sheets")
-        print(f"{e}")
-        os.system("pause")
-        return
+        update_logs(logs, log_container, f"Hubo un error al convertir la conversación de '{ssheet_name}' a csv: {e}")
+        return False
     values = [df.columns.tolist()] + df.values.tolist()
 
     # Separa el buffer en el tag de la unidad y el nombre completo del contacto
@@ -53,18 +68,20 @@ def upload_file_to_google(ssheet_name, csv_buffer, google_creds, system_message_
             ssheet.del_worksheet(ssheet.sheet1)
         worksheet = ssheet.worksheet("00 Conversación")
     else:
-        # guardar data en una pestaña del archivo de la unidad ya existente
+        # Guardar data en una pestaña del archivo de la unidad ya existente
         ssheet_id = google_file_ids[csv_unidad]
         try:
             ssheet = google_creds.open_by_key(ssheet_id)
         except:
-            print(f"No se encontró el ID del spreadsheet para '{csv_unidad}'")
-            print(f"{e}")
-            os.system("pause")
+            st.error(f"No se encontró el ID del spreadsheet para '{csv_unidad}': {e}")
+            return False
         else:
-            worksheet = ssheet.add_worksheet(title=ssheet_name, rows=df.shape[0], cols=df.shape[1])
+            try:
+                worksheet = ssheet.worksheet(ssheet_name)
+            except gspread.WorksheetNotFound:
+                worksheet = ssheet.add_worksheet(title=ssheet_name, rows=df.shape[0], cols=df.shape[1])
     worksheet.clear()
     worksheet.update(values)
     apply_formatting(worksheet, system_message_rows)
-    print(f"Se subió la conversación de '{ssheet_name}' a Google Sheets")
+    update_logs(logs, log_container, f"Se subió la conversación de '{ssheet_name}' a Google Sheets en {csv_unidad}")
     return True
