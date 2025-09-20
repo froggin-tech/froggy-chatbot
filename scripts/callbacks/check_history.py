@@ -1,6 +1,6 @@
 #
-# Versión 0.6
-# Fecha: 15 de septiembre de 2025
+# Versión 1.0
+# Fecha: 20 de septiembre de 2025
 #
 # Autor: Helena Ruiz Ramírez
 # Función: Determina el mensaje de bienvenida y las etiquetas de una conversación entrante. También redirige a un chatbot
@@ -11,7 +11,7 @@ from openai import OpenAI
 from datetime import datetime, timezone
 import pytz
 import os
-from enum_liveconnect import Canales, Sucursales, equipos_IDs, EtiquetaAtender, tag_IDs, user_IDs
+from utils.enum_liveconnect import Canales, Sucursales, equipos_IDs, EtiquetaAtender, tag_IDs, user_IDs
 from utils.liveconnect_api import get_token, get_liveconnect, edit_contact, group_convo
 
 

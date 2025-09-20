@@ -1,6 +1,6 @@
 #
-# Versión 1.0
-# Fecha: 18 de agosto de 2025
+# Versión 1.1
+# Fecha: 20 de septiembre de 2025
 #
 # Autores: Helena Ruiz Ramírez, Pablo Andrés Ruiz Ramírez
 # Función: Crear spreadsheets a partir de un .csv y colocarlos en un designado folder de Google Drive
@@ -12,7 +12,7 @@ import pandas as pd
 import streamlit as st
 from dotenv import load_dotenv
 from format_convos import apply_formatting
-from enum_unidades import Unidades
+from utils.enum_liveconnect import Unidades
 
 
 # Usa HTML para crear un contenedor que automáticamente scrollea hacia abajo

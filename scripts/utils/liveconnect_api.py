@@ -1,6 +1,6 @@
 #
-# Versión 1.0
-# Fecha: 04 de septiembre de 2025
+# Versión 1.1
+# Fecha: 20 de septiembre de 2025
 #
 # Autor: Helena Ruiz Ramírez
 # Función: Módulo para centralizar las funciones de la API de LiveConnect
@@ -92,10 +92,10 @@ def switch_contact_ids(dataframe, participants, pageGearToken):
 
 
 # Agrupa todas las conversaciones asociadas a un contacto y las ordena en un dataframe por usuario, mensaje, fecha y visibilidad
-# get_unidad: Si se quiere obtener la unidad a partir de la conversación más reciente
+# get_canal: Si se quiere obtener el canal a partir de la conversación más reciente
 # include_internal_msgs: Si se quieren incluir los mensajes 'internos' en la agrupación
 # message_limit: Si se quiere limitar el número de mensajes a incluir en la agrupación
-def group_convo(pageGearToken, contact_ID, contact_name, get_unidad=False, include_internal_msgs=False, message_limit=None):
+def group_convo(pageGearToken, contact_ID, contact_name, get_canal=False, include_internal_msgs=False, message_limit=None):
     convo_participants = {} # Todos las ADM y el usuario de la conversación
     convo_participants[contact_ID] = contact_name # Agrega como 1er participante al contacto
 
@@ -108,7 +108,7 @@ def group_convo(pageGearToken, contact_ID, contact_name, get_unidad=False, inclu
     messages_data = [] # Para después almacenar todas las conversaciones ligadas a un usuario
     system_message_rows = [] # Para después almacenar el número de cada fila con mensajes del 'Sistema'
     convo_table = [] # Para después almacenar la conversación en formato de tabla
-    unidad = '' # Para después guardar la unidad asociada con el contacto y escribirla en el título del archivo
+    canal = '' # Para después guardar el canal asociado con el contacto y escribirlo en el título del archivo
     if 'data' in all_user_convos_json_resp:
         index = 1
         for x in all_user_convos_json_resp['data']:
@@ -136,7 +136,7 @@ def group_convo(pageGearToken, contact_ID, contact_name, get_unidad=False, inclu
             
             # Checa si está revisando la conversación más reciente, osea la primera en la búsqueda
             if index == 1:
-                unidad = x['grupo']
+                canal = x['id_canal']
                 index -=1
 
         # Para que solo analice los mensajes más recientes según el máximo establecido
@@ -179,7 +179,7 @@ def group_convo(pageGearToken, contact_ID, contact_name, get_unidad=False, inclu
     else:
         print("HUBO UN ERROR AL OBTENER LAS CONVERSACIONES DEL USUARIO")
 
-    if get_unidad:
-        return convo_table, unidad, system_message_rows
+    if get_canal:
+        return convo_table, canal, system_message_rows
     else:
         return convo_table

@@ -1,6 +1,6 @@
 #
-# Versión 1.0
-# Fecha: 18 de septiembre de 2025
+# Versión 1.1
+# Fecha: 20 de septiembre de 2025
 #
 # Autor: Helena Ruiz Ramírez
 # Función: Interfaz del usuario para una web app con streamlit que
@@ -9,7 +9,7 @@
 import streamlit as st
 from google_auth import create_google_credentials
 from pull_convos import pull_conversations
-from enum_unidades import Unidades
+from utils.enum_liveconnect import Unidades
 
 # --- Page Config ---
 st.set_page_config(page_title="Froggy App", page_icon="🐸")

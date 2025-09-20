@@ -1,6 +1,6 @@
 #
-# Versión 2.0
-# Fecha: 18 de septiembre de 2025
+# Versión 2.1
+# Fecha: 20 de septiembre de 2025
 #
 # Autor: Helena Ruiz Ramírez
 # Función: Llamar registros de conversaciones de la plataforma LiveConnect según ciertos parametros
@@ -11,15 +11,15 @@ import streamlit as st
 from types import NoneType
 import pandas as pd
 from upload_convos import *
-from enum_equipos import Equipos
 from utils.liveconnect_api import get_token, get_liveconnect, group_convo
+from utils.enum_liveconnect import Canales
 
 
-def export_to_csv(unidad, user_full_name, convo_table, google_creds, system_message_rows, format_option, google_file_ids, logs, log_container):
+def export_to_csv(canal, user_full_name, convo_table, google_creds, system_message_rows, format_option, google_file_ids, logs, log_container):
     # Intenta exportar la tabla a un .csv. Si hay un error, lo imprime a la consola
     # El nombre del archivo es el tag del prospecto/papá y se guarda en la carpeta de su unidad
     csv_buffer = io.StringIO()
-    unidad = Equipos.from_value(unidad).name
+    unidad = Canales.from_value(canal).name
     file_name = f"{unidad} {user_full_name}"
     try:
         convo_table.to_csv(csv_buffer, index=False, encoding='utf-8-sig')
@@ -89,9 +89,9 @@ def pull_conversations(total_convos_to_fetch, google_creds, first_convo, convos_
             id_contacto = messages_data['conversacion']['id_contacto']
             
             # Manda a llamar la función para agrupar todo el historial de conversaciones del usuario
-            convo_table, unidad, system_message_rows = group_convo(pageGearToken, id_contacto, user_full_name, get_unidad=True, include_internal_msgs=True)
+            convo_table, canal, system_message_rows = group_convo(pageGearToken, id_contacto, user_full_name, get_canal=True, include_internal_msgs=True)
 
-            result = export_to_csv(unidad, user_full_name, convo_table, google_creds, system_message_rows, format_option, google_file_ids)
+            result = export_to_csv(canal, user_full_name, convo_table, google_creds, system_message_rows, format_option, google_file_ids)
             if not result:
                 return
             progress_bar.progress(1.0)
@@ -110,9 +110,9 @@ def pull_conversations(total_convos_to_fetch, google_creds, first_convo, convos_
                 id_contacto = x['id_contacto']
 
                 # Manda a llamar la función para agrupar todo el historial de conversaciones del usuario
-                convo_table, unidad, system_message_rows = group_convo(pageGearToken, id_contacto, user_full_name, get_unidad=True, include_internal_msgs=True)
+                convo_table, canal, system_message_rows = group_convo(pageGearToken, id_contacto, user_full_name, get_canal=True, include_internal_msgs=True)
                 
-                result = export_to_csv(unidad, user_full_name, convo_table, google_creds, system_message_rows, format_option, google_file_ids, logs, log_container)
+                result = export_to_csv(canal, user_full_name, convo_table, google_creds, system_message_rows, format_option, google_file_ids, logs, log_container)
                 if not result:
                     st.error(f"Se detuvo el proceso en la conversación #{i+1}.")
                     return

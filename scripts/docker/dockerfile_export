@@ -1,3 +1,10 @@
+#
+# Versión 1.0
+# Fecha: 20 de septiembre de 2025
+#
+# Autores: Helena Ruiz Ramírez
+# Función: Instrucciones para desplegar la aplicación de exports con Docker
+#
 # Usa una imagen oficial de Python como imagen base
 FROM python:3.13.7
 
@@ -15,13 +22,13 @@ RUN mkdir -p export-to-sheets utils
 
 # Copia los archivos específicos de la aplicación a sus respectivos directorios
 COPY export-to-sheets/enum_equipos.py export-to-sheets/
-COPY export-to-sheets/enum_unidades.py export-to-sheets/
 COPY export-to-sheets/format_convos.py export-to-sheets/
 COPY export-to-sheets/google_auth.py export-to-sheets/
 COPY export-to-sheets/pull_convos.py export-to-sheets/
 COPY export-to-sheets/streamlit_app.py export-to-sheets/
 COPY export-to-sheets/upload_convos.py export-to-sheets/
 COPY utils/liveconnect_api.py utils/
+COPY utils/enum_liveconnect.py utils/
 
 # Hace que el puerto 8501 esté disponible
 EXPOSE 8501

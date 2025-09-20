@@ -1,3 +1,10 @@
+#
+# Versión 1.0
+# Fecha: 20 de septiembre de 2025
+#
+# Autores: Helena Ruiz Ramírez
+# Función: Instrucciones para desplegar la aplicación de callbacks con Docker
+#
 # Usa una imagen oficial de Python como imagen base
 FROM python:3.9-slim
 
@@ -15,8 +22,8 @@ RUN mkdir -p callbacks utils
 
 # Copia los archivos específicos de la aplicación a sus respectivos directorios
 COPY callbacks/check_history.py callbacks/
-COPY callbacks/enum_liveconnect.py callbacks/
 COPY utils/liveconnect_api.py utils/
+COPY utils/enum_liveconnect.py utils/
 
 # Hace que el puerto 8080 esté disponible
 EXPOSE 8080

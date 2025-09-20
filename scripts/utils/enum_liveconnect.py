@@ -1,12 +1,25 @@
 #
-# Versión 0.4
-# Fecha: 15 de septiembre de 2025
+# Versión 1.0
+# Fecha: 20 de septiembre de 2025
 #
 # Autores: Helena Ruiz Ramírez
 # Función: Enumeradores y diccionarios para los canales en LiveConnect por ID, las sucursales por etiqueta, el ID
 #           del equipo correspondiente según el ID del canal, IDs y nombres de usuarios e IDs y nombres de etiquetas
 #
-from enum import Enum
+from enum import Enum, StrEnum
+
+
+class Unidades(StrEnum):
+    __order__ = "ELITE SANNICOLAS DOMINIO ESCOBEDO DEFAULT"
+    ELITE = "ELI"
+    SANNICOLAS = "SAN"
+    DOMINIO = "DOM"
+    ESCOBEDO = "ESC"
+    DEFAULT = "DEF"
+
+    @classmethod
+    def _missing_(cls, value):
+        return Unidades.DEFAULT
 
 
 # Identificador sucursal <- ID Equipo
