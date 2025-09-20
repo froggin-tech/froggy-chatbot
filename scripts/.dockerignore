@@ -6,7 +6,6 @@ scripts/.vscode
 
 # Ignorar código irrelevante al app de Flask
 scripts/.vscode
-scripts/export-to-sheets
 
 # Ignorar bytecode
 __pycache__/

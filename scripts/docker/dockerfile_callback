@@ -14,9 +14,9 @@ RUN pip install --no-cache-dir -r requirements_callback.txt
 RUN mkdir -p callbacks utils
 
 # Copia los archivos específicos de la aplicación a sus respectivos directorios
-COPY scripts/callbacks/check_history.py callbacks/
-COPY scripts/callbacks/enum_liveconnect.py callbacks/
-COPY scripts/utils/liveconnect_api.py utils/
+COPY callbacks/check_history.py callbacks/
+COPY callbacks/enum_liveconnect.py callbacks/
+COPY utils/liveconnect_api.py utils/
 
 # Hace que el puerto 8080 esté disponible
 EXPOSE 8080

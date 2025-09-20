@@ -12,9 +12,6 @@ from types import NoneType
 import pandas as pd
 from upload_convos import *
 from enum_equipos import Equipos
-import sys
-from pathlib import Path
-sys.path.append(str(Path(__file__).resolve().parent.parent))
 from utils.liveconnect_api import get_token, get_liveconnect, group_convo
 
 

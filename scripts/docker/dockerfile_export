@@ -1,0 +1,36 @@
+# Usa una imagen oficial de Python como imagen base
+FROM python:3.13.7
+
+# Establece el directorio de trabajo en el contenedor
+WORKDIR /app
+
+# Copia el archivo de requerimientos, osea las librerias que utilisa el programa
+COPY docker/requirements_export.txt .
+
+# Instalar los paquetes necesarios
+RUN pip install --no-cache-dir -r requirements_export.txt
+
+# Crea los directorios necesarios para la aplicación
+RUN mkdir -p export-to-sheets utils
+
+# Copia los archivos específicos de la aplicación a sus respectivos directorios
+COPY export-to-sheets/enum_equipos.py export-to-sheets/
+COPY export-to-sheets/enum_unidades.py export-to-sheets/
+COPY export-to-sheets/format_convos.py export-to-sheets/
+COPY export-to-sheets/google_auth.py export-to-sheets/
+COPY export-to-sheets/pull_convos.py export-to-sheets/
+COPY export-to-sheets/streamlit_app.py export-to-sheets/
+COPY export-to-sheets/upload_convos.py export-to-sheets/
+COPY utils/liveconnect_api.py utils/
+
+# Hace que el puerto 8501 esté disponible
+EXPOSE 8501
+
+# Define la variable de entorno para el puerto
+ENV PORT=8501
+
+# Le dice a la aplicación que considere el path completo (no solo /export-to-sheets) al correr
+ENV PYTHONPATH="/app"
+
+# Ejecuta la aplicación streamlit cuando el contenedor se inicie
+CMD ["streamlit", "run", "export-to-sheets/streamlit_app.py", "--server.port", "8501", "--server.enableCORS", "false", "--server.headless", "true"]

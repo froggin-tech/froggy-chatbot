@@ -89,7 +89,7 @@ if google_creds:
     with tab3:
         # Botón para iniciar la exportación
         st.subheader("3. Exportar a Google Sheets")
-        st.text("Por favor de click al botón cuando haya configurado los pasos anteriores.")
+        st.write("Por favor de click al botón cuando haya configurado los pasos anteriores.")
         if st.button("Iniciar Exportación", type="primary"):
             if convos_option > 0:
                 pull_conversations(

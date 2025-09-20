@@ -1,9 +1,7 @@
 python-dotenv==1.1.1
 requests==2.32.4
 pandas==2.3.1
-gspread==6.2.1
-gspread-formatting==1.2.1
 Flask==3.1.2
 openai==1.104.2
+pytz==2025.2
 gunicorn
-pytz
