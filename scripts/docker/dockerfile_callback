@@ -6,7 +6,7 @@
 # Función: Instrucciones para desplegar la aplicación de callbacks con Docker
 #
 # Usa una imagen oficial de Python como imagen base
-FROM python:3.9-slim
+FROM python:3.13.7
 
 # Establece el directorio de trabajo en el contenedor
 WORKDIR /app
