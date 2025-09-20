@@ -109,8 +109,15 @@ def team_delegate(data, acciones):
     print(EtiquetaAtender.from_value(tag_sucursal).value)
 
 
-@app.route("/", methods=["POST"])
+@app.route("/", methods=["GET", "POST"])
 def identify_contact():
+    if request.method == 'GET':
+        return '''
+            <!doctype html>
+            <title>Franny TRANSFER Status</title>
+            <h1>¡El servidor está corriendo!</h1>
+        ''', 200
+
     # Protege al servidor de requests no deseados al verificar el secret key
     # Primero checa en los headers, y si no, en los argumentos del URL
     incoming_secret = request.headers.get("secret") or request.args.get("secret")
