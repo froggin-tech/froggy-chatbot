@@ -1,0 +1,28 @@
+# Usa una imagen oficial de Python como imagen base
+FROM python:3.9-slim
+
+# Establece el directorio de trabajo en el contenedor
+WORKDIR /app
+
+# Copia el archivo de requerimientos, osea las librerias que utilisa el programa
+COPY docker/requirements_callback.txt .
+
+# Instala las paqueterías necesarias
+RUN pip install --no-cache-dir -r requirements_callback.txt
+
+# Crea los directorios necesarios para la aplicación
+RUN mkdir -p callbacks utils
+
+# Copia los archivos específicos de la aplicación a sus respectivos directorios
+COPY callbacks/check_history.py callbacks/
+COPY callbacks/enum_liveconnect.py callbacks/
+COPY utils/liveconnect_api.py utils/
+
+# Hace que el puerto 8080 esté disponible
+EXPOSE 8080
+
+# Define la variable de entorno para el puerto
+ENV PORT=8080
+
+# Ejecuta la aplicación cuando el contenedor se inicie
+CMD ["gunicorn", "--bind", "0.0.0.0:8080", "callbacks.check_history:app"]

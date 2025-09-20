@@ -11,10 +11,7 @@ from openai import OpenAI
 from datetime import datetime, timezone
 import pytz
 import os
-import sys
-from pathlib import Path
-sys.path.append(str(Path(__file__).resolve().parent.parent))
-from .enum_liveconnect import Canales, Sucursales, equipos_IDs, EtiquetaAtender, tag_IDs, user_IDs
+from enum_liveconnect import Canales, Sucursales, equipos_IDs, EtiquetaAtender, tag_IDs, user_IDs
 from utils.liveconnect_api import get_token, get_liveconnect, edit_contact, group_convo
 
 
