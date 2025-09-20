@@ -1,0 +1,32 @@
+# Steps para actualizar "server-callback"
+steps:
+# 1. Construye la nueva imagen Docker después de hacer cambios
+- name: 'gcr.io/cloud-builders/docker'
+  args: ['build', '-t', 'gcr.io/$PROJECT_ID/server-callback:latest', '-f', 'docker/dockerfile_callback', '.']
+
+# 2. Sube la imagen del contenedor al registro
+- name: 'gcr.io/cloud-builders/docker'
+  args: ['push', 'gcr.io/$PROJECT_ID/server-callback:latest']
+
+# 3. Despliega la imagen del contenedor a Cloud Run
+- name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+  entrypoint: gcloud
+  args:
+    - 'run'
+    - 'deploy'
+    - 'server-callback' # El nombre del servicio en Cloud Run
+    - '--image'
+    - 'gcr.io/$PROJECT_ID/server-callback:latest'
+    - '--region'
+    - 'northamerica-south1' # Región más cercana a México
+    - '--platform'
+    - 'managed'
+    - '--allow-unauthenticated' # Permite el acceso público al servicio
+
+# Indica que utilise el mecanismo estándar para almacenar los registros de builds
+options:
+  logging: CLOUD_LOGGING_ONLY
+
+# Almacena las imagenes en el registro
+images:
+- 'gcr.io/$PROJECT_ID/server-callback:latest'

@@ -1,11 +1,11 @@
-steps:
+# Steps para actualizar "export-to-sheets"
 # 1. Construye la nueva imagen Docker después de hacer cambios
 - name: 'gcr.io/cloud-builders/docker'
-  args: ['build', '-t', 'gcr.io/$PROJECT_ID/server-callback:latest', '-f', 'docker/Dockerfile', '.']
+  args: ['build', '-t', 'gcr.io/$PROJECT_ID/export-app:latest', '-f', 'docker/dockerfile_export', '.']
 
 # 2. Sube la imagen del contenedor al registro
 - name: 'gcr.io/cloud-builders/docker'
-  args: ['push', 'gcr.io/$PROJECT_ID/server-callback:latest']
+  args: ['push', 'gcr.io/$PROJECT_ID/export-app:latest']
 
 # 3. Despliega la imagen del contenedor a Cloud Run
 - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
@@ -13,11 +13,11 @@ steps:
   args:
     - 'run'
     - 'deploy'
-    - 'server-callback' # El nombre del servicio en Cloud Run
+    - 'export-app' # El nombre del servicio en Cloud Run
     - '--image'
-    - 'gcr.io/$PROJECT_ID/server-callback:latest'
+    - 'gcr.io/$PROJECT_ID/export-app:latest'
     - '--region'
-    - 'northamerica-south1' # Región más cercana a México
+    - 'northamerica-south1' # Región más cercana a México, misma al otro servicio
     - '--platform'
     - 'managed'
     - '--allow-unauthenticated' # Permite el acceso público al servicio
@@ -26,6 +26,6 @@ steps:
 options:
   logging: CLOUD_LOGGING_ONLY
 
-# Almacena la imagen en el registro
+# Almacena las imagenes en el registro
 images:
-- 'gcr.io/$PROJECT_ID/server-callback:latest'
+- 'gcr.io/$PROJECT_ID/export-app:latest'
