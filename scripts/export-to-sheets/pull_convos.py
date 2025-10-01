@@ -91,7 +91,7 @@ def pull_conversations(total_convos_to_fetch, google_creds, first_convo, convos_
             # Manda a llamar la función para agrupar todo el historial de conversaciones del usuario
             convo_table, canal, system_message_rows = group_convo(pageGearToken, id_contacto, user_full_name, get_canal=True, include_internal_msgs=True)
 
-            result = export_to_csv(canal, user_full_name, convo_table, google_creds, system_message_rows, format_option, google_file_ids)
+            result = export_to_csv(canal, user_full_name, convo_table, google_creds, system_message_rows, format_option, google_file_ids, logs, log_container)
             if not result:
                 return
             progress_bar.progress(1.0)
