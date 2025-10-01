@@ -77,6 +77,8 @@ def pull_conversations(total_convos_to_fetch, google_creds, first_convo, convos_
     with st.spinner("... PASO 3/3: SUBIENDO CONVERSACIONES A GOOGLE SHEETS ..."):
         progress_bar = st.progress(0)
         convos_progress = 1 if convos_option == 1 else len(convos_json_resp['data'])
+        log_container = st.empty()
+        logs = []
         
         if convos_option == 1: # Una sola conversación
             # Guarda en un diccionario el nombre completo del prospecto o papá
@@ -96,8 +98,6 @@ def pull_conversations(total_convos_to_fetch, google_creds, first_convo, convos_
                 return
             progress_bar.progress(1.0)
         else: # Varias conversaciones
-            log_container = st.empty()
-            logs = []
             for i, x in enumerate(convos_json_resp['data']):
                 new_log = f"Agrupando la conversación #{i+1}..."
                 update_logs(logs, log_container, new_log)
