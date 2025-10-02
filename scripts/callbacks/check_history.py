@@ -31,20 +31,23 @@ def is_within_schedule():
     current_day = now_mexico.weekday()
     current_hour = now_mexico.hour
     current_min = now_mexico.minute
+
+    # 00:00 - 13:29
+    # 15:10 - 15:44
+    # 19:00 - 23:59
     
     # Checa si el resultado cae dentro del horario establecido
     if 0 <= current_day <= 4: # De lunes a viernes
-        if 10 <= current_hour < 14: # 10:00 AM y 01:59 PM
-            if current_hour == 10 and current_min < 30: # No incluye antes de las 10:30 AM
-                return False
-            elif current_hour == 13 and current_min >= 30: # No incluye después de la 01:29 PM
+        if 00 <= current_hour < 14: # 00:00 AM y 01:59 PM
+            if current_hour == 13 and current_min >= 30: # No incluye después de la 01:29 PM
                 return False
             else:
                 return True
         elif 15 == current_hour: # 03 PM
-            if 10 <= current_min <= 45: #Entre 03:10 PM y 03:45 PM
+            if 10 <= current_min < 45: #Entre 03:10 PM y 03:44 PM
                 return True
-            
+        elif 19 <= current_hour: # De las 07:00 PM en adelante
+            return True;
     # Cualquier otra hora no es válida
     return False
 
