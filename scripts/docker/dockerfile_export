@@ -22,7 +22,7 @@ RUN mkdir -p export-to-sheets utils
 
 # Copia el contenido de la aplicación
 COPY export-to-sheets/ ./export-to-sheets/
-COPY utils/ .utils/
+COPY utils/ ./utils/
 
 # Hace que el puerto 8501 esté disponible
 EXPOSE 8501
