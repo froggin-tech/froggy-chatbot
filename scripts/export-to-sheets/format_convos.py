@@ -6,18 +6,8 @@
 # Función: Aplicar formato a las celdas al subir las conversaciones a Google Sheets
 #
 from gspread_formatting import *
-from utils.google_api import exponential_backoff
+from utils.google_api import execute_api_operation
 
-
-@exponential_backoff
-def batch_format_cells(worksheet, formatting_requests):
-    """Aplica una lista de formatos de celda en un solo batch."""
-    format_cell_ranges(worksheet, formatting_requests)
-
-@exponential_backoff
-def resize_columns(worksheet):
-    """Ajusta el grosor de las columnas."""
-    set_column_widths(worksheet, [('A', 235), ('B', 500), ('C', 135), ('D', 60)])
 
 def apply_formatting(worksheet, system_message_rows):
     # Junta todos los formatos especificados en una lista.
@@ -48,6 +38,6 @@ def apply_formatting(worksheet, system_message_rows):
 
     # Ejecuta las llamadas a la API, protegidas por el decorador de backoff
     if formatting_requests:
-        batch_format_cells(worksheet, formatting_requests)
+        execute_api_operation(format_cell_ranges, worksheet, formatting_requests)
     
-    resize_columns(worksheet)
+    execute_api_operation(set_column_widths, worksheet, [('A', 235), ('B', 500), ('C', 135), ('D', 60)])

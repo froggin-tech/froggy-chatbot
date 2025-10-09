@@ -13,6 +13,7 @@ import streamlit as st
 from dotenv import load_dotenv
 from format_convos import apply_formatting
 from utils.enum_liveconnect import Unidades
+from utils.google_api import execute_api_operation
 
 
 # Usa HTML para crear un contenedor que automáticamente scrollea hacia abajo
@@ -61,27 +62,27 @@ def upload_file_to_google(ssheet_name, csv_buffer, google_creds, system_message_
         # Si el contacto ya tenía un archivo, se actualiza
         # Si no lo encuentra, entonces crea un nuevo sheet
         try:
-            ssheet = google_creds.open(ssheet_name)
-        except:
-            ssheet = google_creds.create(ssheet_name, ssheet_folder_id)
-            worksheet = ssheet.add_worksheet(title="00 Conversación", rows=df.shape[0], cols=df.shape[1])
-            ssheet.del_worksheet(ssheet.sheet1)
-        worksheet = ssheet.worksheet("00 Conversación")
+            ssheet = execute_api_operation(google_creds.open, ssheet_name)
+        except gspread.exceptions.SpreadsheetNotFound:
+            ssheet = execute_api_operation(google_creds.create, ssheet_name, ssheet_folder_id)
+            worksheet = execute_api_operation(ssheet.add_worksheet, title="00 Conversación", rows=df.shape[0], cols=df.shape[1])
+            execute_api_operation(ssheet.del_worksheet, ssheet.sheet1)
+        worksheet = execute_api_operation(ssheet.worksheet, "00 Conversación")
     else:
         # Guardar data en una pestaña del archivo de la unidad ya existente
         ssheet_id = google_file_ids[csv_unidad]
         try:
-            ssheet = google_creds.open_by_key(ssheet_id)
-        except:
+            ssheet = execute_api_operation(google_creds.open_by_key, ssheet_id)
+        except Exception as e:
             st.error(f"No se encontró el ID del spreadsheet para '{csv_unidad}': {e}")
             return False
         else:
             try:
-                worksheet = ssheet.worksheet(ssheet_name)
+                worksheet = execute_api_operation(ssheet.worksheet, ssheet_name)
             except gspread.WorksheetNotFound:
-                worksheet = ssheet.add_worksheet(title=ssheet_name, rows=df.shape[0], cols=df.shape[1])
-    worksheet.clear()
-    worksheet.update(values)
+                worksheet = execute_api_operation(ssheet.add_worksheet, title=ssheet_name, rows=df.shape[0], cols=df.shape[1])
+    execute_api_operation(worksheet.clear)
+    execute_api_operation(worksheet.update, values)
     apply_formatting(worksheet, system_message_rows)
     update_logs(logs, log_container, f"Se subió la conversación de '{ssheet_name}' a Google Sheets en {csv_unidad}")
     return True

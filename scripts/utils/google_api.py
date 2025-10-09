@@ -27,3 +27,9 @@ def exponential_backoff(func):
                 else:
                     raise
     return wrapper
+
+
+# Ejecuta una función con exponential backoff
+@exponential_backoff
+def execute_api_operation(func, *args, **kwargs):
+    return func(*args, **kwargs)
