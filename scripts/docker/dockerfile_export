@@ -34,4 +34,4 @@ ENV PORT=8501
 ENV PYTHONPATH="/app"
 
 # Ejecuta la aplicación streamlit cuando el contenedor se inicie
-CMD ["streamlit", "run", "export-to-sheets/streamlit_app.py", "--server.port", "8501", "--server.headless", "true"]
+CMD ["streamlit", "run", "export-to-sheets/streamlit_app.py", "--server.port", "8501", "--server.headless", "true", "--logger.level", "error"]
