@@ -1,6 +1,6 @@
 #
-# Versión 1.1
-# Fecha: 20 de septiembre de 2025
+# Versión 1.2
+# Fecha: 08 de octubre de 2025
 #
 # Autor: Helena Ruiz Ramírez
 # Función: Interfaz del usuario para una web app con streamlit que
@@ -24,7 +24,7 @@ starting_user_index = 0
 starting_page_index = 0
 total_convos_to_fetch = 0
 ending_user_index = 0
-full_pages = 0
+ending_page_index = 0
 format_option = 0
 google_file_ids = {}
 
@@ -38,7 +38,7 @@ if google_creds:
         st.subheader("1. Definir Conversaciones a Exportar")
         convos_option_str = st.radio(
             "¿Qué conversaciones desea exportar?",
-            ("Una conversación específica", "Una cantidad específica de conversaciones (una página)", "Exportar por mes (varias páginas)")
+            ("Una conversación específica", "Una cantidad específica de conversaciones (una sola página)", "Exportar por mes (varias páginas)")
         )
         if convos_option_str.startswith("Una conversación"):
             convos_option = 1
@@ -60,13 +60,13 @@ if google_creds:
             starting_user_index = (int(starting_user_index) - 1) + ((int(starting_page_index) - 1) * 100)
         elif convos_option == 3:
             st.write("Indique dónde se ubica la primera y última conversación a exportar, para calcular el total de filas.")
+            starting_page_index = st.number_input("Número de la página donde están las conversaciones (mín. 1):", min_value=1)
             starting_user_index = st.number_input("Número de la fila donde está la primera conversación (1-100):", min_value=1, max_value=100)
+            ending_page_index = st.number_input("Número de la página donde está la última conversación (mín. 1):", min_value=1)
             ending_user_index = st.number_input("Número de la fila donde está la última conversación (1-100):", min_value=1, max_value=100)
-            full_pages = st.number_input("Páginas completas entre ambas conversaciones (mín 0):", min_value=0)
-            starting_user_index = int(starting_user_index) - 1
-            ending_user_index = int(ending_user_index)
-            full_pages = int(full_pages)
-            total_convos_to_fetch = (100 - starting_user_index) + (full_pages * 100) + ending_user_index
+            starting_user_index = (int(starting_user_index) - 1) + ((int(starting_page_index) - 1) * 100)
+            ending_user_index = int(ending_user_index) + ((int(ending_page_index) - 1) * 100)
+            total_convos_to_fetch = ending_user_index - starting_user_index
     with tab2:
         # Menú para seleccionar el formato de almacenamiento
         st.subheader("2. Escoger Método de Almacenamiento")
