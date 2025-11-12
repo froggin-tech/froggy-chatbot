@@ -26,7 +26,6 @@ total_convos_to_fetch = 0
 ending_user_index = 0
 ending_page_index = 0
 format_option = 0
-google_file_ids = {}
 
 # --- Autenticación de Google ---
 google_creds = create_google_credentials()
@@ -80,12 +79,8 @@ if google_creds:
         if format_option == 1:
             st.write("Los ID's de las carpetas ya se encuentran en el sistema. Puede continuar.")
         elif format_option == 2:
-            # Itera cada una de las unidades registradas en el archivo enum_equipos.py
-            # ¡Es importante mantener este y enum_equipos actualizados si hay cambios en las sucursales!
-            st.write("Por favor, escriba el ID del archivo de cada unidad. Fíjese en el URL y escriba el código sin las diagonales.")
-            st.write("Ejemplo: 'https:// docs.google.com/spreadsheets/d/12345/edit?...', el ID es '12345'")
-            for item in Unidades:
-                google_file_ids[item.name] = st.text_input(f"ID para {item.name}:")
+            st.write("Los ID's de los archivos BASE ya se encuentran en el sistema.")
+            st.write("¡Recuerde hacer respaldos de los archivos actuales y limpiar el archivo ('Borrar Hojas Individuales') antes de correr este programa!")
     with tab3:
         # Botón para iniciar la exportación
         st.subheader("3. Exportar a Google Sheets")
@@ -97,8 +92,7 @@ if google_creds:
                     google_creds=google_creds,
                     first_convo=starting_user_index,
                     convos_option=convos_option,
-                    format_option=format_option,
-                    google_file_ids=google_file_ids
+                    format_option=format_option
                 )
             else:
                 st.error("Por favor, seleccione una opción de exportación válida (Paso #2 y #3).")

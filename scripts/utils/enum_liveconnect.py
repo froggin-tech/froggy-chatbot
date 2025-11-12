@@ -25,7 +25,7 @@ class Unidades(StrEnum):
 # Identificador sucursal <- ID Equipo
 class Canales(Enum):
     ELI = ("115", "4124") # 02 Elite (WA), 02 Elite Facebook
-    SAN = ("57755", "19026") # 04 SanNicolas WABA, 04 SanNicolas Facebook
+    SAN = ("243", "19026") # 04 SanNicolas QR, 04 SanNicolas Facebook
     DOM = ("735", "19027") # 05 Dominio (WA), 05 Dominio Facebook
     ESC = ("235", "19028") # 06 Escobedo (WA), 06 Escobedo Facebook
     DEF = ()
@@ -58,7 +58,7 @@ class Sucursales(Enum):
 equipos_IDs = {
     "115": "9089", # 02 Elite WA = 02 Elite
     "4124": "10094", # 02 Elite Facebook = 02 Elite Facebook
-    "57755": "4041", # 04 SanNicolas WABA = 04 SanNicolas
+    "243": "4041", # 04 SanNicolas QR = 04 SanNicolas
     "19026": "10096", # 04 SanNicolas Facebook = 04 SanNicolas Facebook
     "735": "9091", # 05 Dominio WA = 05 Dominio
     "19027": "10098", # 05 Dominio Facebook = 05 Dominio Facebook

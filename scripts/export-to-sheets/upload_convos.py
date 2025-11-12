@@ -31,7 +31,7 @@ def update_logs(logs, log_container, new_log):
 
 
 # Determina si hay que crear archivos/spreadsheets o crear pestañas/hojas según la solicitud del usuario
-def upload_file_to_google(ssheet_name, csv_buffer, google_creds, system_message_rows, format_option, google_file_ids, logs, log_container):
+def upload_file_to_google(ssheet_name, csv_buffer, google_creds, system_message_rows, format_option, logs, log_container):
     # Guarda los datos del csv buffer en una tabla para un spreadsheet
     try:
         csv_buffer.seek(0)
@@ -69,8 +69,18 @@ def upload_file_to_google(ssheet_name, csv_buffer, google_creds, system_message_
             execute_api_operation(ssheet.del_worksheet, ssheet.sheet1)
         worksheet = execute_api_operation(ssheet.worksheet, "00 Conversación")
     else:
+        # Carga el archivo .env con todos los secrets necesarios para obtener el archivo BASE en GDrive
+        load_dotenv()
+        file_name = "G_FILE_ID_" + csv_unidad
+        try:
+            ssheet_id = os.environ.get(file_name, None)
+        except:
+            # Si por alguna razón el archivo indicado no existe, se sube al de respaldo
+            csv_unidad = Unidades("DEF").name
+            file_name = "G_FILE_ID_" + csv_unidad
+            ssheet_id = os.environ.get(file_name, None)
+        
         # Guardar data en una pestaña del archivo de la unidad ya existente
-        ssheet_id = google_file_ids[csv_unidad]
         try:
             ssheet = execute_api_operation(google_creds.open_by_key, ssheet_id)
         except Exception as e:

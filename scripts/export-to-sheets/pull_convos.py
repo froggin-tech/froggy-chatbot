@@ -16,7 +16,7 @@ from utils.enum_liveconnect import Canales
 from utils.google_api import execute_api_operation
 
 
-def export_to_csv(canal, user_full_name, convo_table, google_creds, system_message_rows, format_option, google_file_ids, logs, log_container):
+def export_to_csv(canal, user_full_name, convo_table, google_creds, system_message_rows, format_option, logs, log_container):
     # Intenta exportar la tabla a un .csv. Si hay un error, lo imprime a la consola
     # El nombre del archivo es el tag del prospecto/papá y se guarda en la carpeta de su unidad
     csv_buffer = io.StringIO()
@@ -29,14 +29,14 @@ def export_to_csv(canal, user_full_name, convo_table, google_creds, system_messa
         return False
     else:
         update_logs(logs, log_container, f"Se guardó la conversación de '{user_full_name}' en formato csv")
-        if not upload_file_to_google(file_name, csv_buffer, google_creds, system_message_rows, format_option, google_file_ids, logs, log_container):
+        if not upload_file_to_google(file_name, csv_buffer, google_creds, system_message_rows, format_option, logs, log_container):
             update_logs(logs, log_container, f"Hubo un error al subir la conversación '{file_name}' a Google Drive")
             return False
         else:
             return True
 
 
-def pull_conversations(total_convos_to_fetch, google_creds, first_convo, convos_option, format_option, google_file_ids):
+def pull_conversations(total_convos_to_fetch, google_creds, first_convo, convos_option, format_option):
     # Quita los límites de las tablas
     pd.set_option('display.max_colwidth', None)
     pd.set_option('display.width', None)
@@ -94,7 +94,7 @@ def pull_conversations(total_convos_to_fetch, google_creds, first_convo, convos_
             # Manda a llamar la función para agrupar todo el historial de conversaciones del usuario
             convo_table, canal, system_message_rows = execute_api_operation(group_convo, pageGearToken, id_contacto, user_full_name, get_canal=True, include_internal_msgs=True)
 
-            result = export_to_csv(canal, user_full_name, convo_table, google_creds, system_message_rows, format_option, google_file_ids, logs, log_container)
+            result = export_to_csv(canal, user_full_name, convo_table, google_creds, system_message_rows, format_option, logs, log_container)
             if not result:
                 return
             progress_bar.progress(1.0)
@@ -113,7 +113,7 @@ def pull_conversations(total_convos_to_fetch, google_creds, first_convo, convos_
                 # Manda a llamar la función para agrupar todo el historial de conversaciones del usuario
                 convo_table, canal, system_message_rows = execute_api_operation(group_convo, pageGearToken, id_contacto, user_full_name, get_canal=True, include_internal_msgs=True)
                 
-                result = export_to_csv(canal, user_full_name, convo_table, google_creds, system_message_rows, format_option, google_file_ids, logs, log_container)
+                result = export_to_csv(canal, user_full_name, convo_table, google_creds, system_message_rows, format_option, logs, log_container)
                 if not result:
                     st.error(f"Se detuvo el proceso en la conversación #{i+1}.")
                     return
