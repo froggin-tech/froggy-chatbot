@@ -13,6 +13,7 @@ import pandas as pd
 from upload_convos import *
 from utils.liveconnect_api import get_token, get_liveconnect, group_convo
 from utils.enum_liveconnect import Canales
+from utils.google_api import execute_api_operation
 
 
 def export_to_csv(canal, user_full_name, convo_table, google_creds, system_message_rows, format_option, google_file_ids, logs, log_container):
@@ -50,7 +51,7 @@ def pull_conversations(total_convos_to_fetch, google_creds, first_convo, convos_
 
     with st.spinner("... PASO 1/3: GENERANDO TOKEN PARA AUTORIZAR LA CONEXIÓN A LIVECONNECT ..."):
         # Crea el token único por usuario para usar las APIs cada que corre el script
-        token_json_resp = get_token()
+        token_json_resp = execute_api_operation(get_token)
         if 'PageGearToken' in token_json_resp:
             pageGearToken = token_json_resp['PageGearToken']
         else:
@@ -63,12 +64,12 @@ def pull_conversations(total_convos_to_fetch, google_creds, first_convo, convos_
         messages_endpoint = "history/conversation" # Para obtener una conversación completa
         if convos_option == 1: # Una sola conversación
             messages_payload = {"id": first_convo}
-            messages_json_resp = get_liveconnect(messages_endpoint, messages_payload, pageGearToken)
+            messages_json_resp = execute_api_operation(get_liveconnect, messages_endpoint, messages_payload, pageGearToken)
             if not messages_json_resp:
                 st.error("No se pudo obtener la conversación de LiveConnect.")
                 return
         else: # Varias conversaciones
-            convos_json_resp = get_liveconnect(all_convos_endpoint, all_convos_payload, pageGearToken)
+            convos_json_resp = execute_api_operation(get_liveconnect, all_convos_endpoint, all_convos_payload, pageGearToken)
             if not convos_json_resp:
                 st.error("No se pudieron obtener las conversaciones de LiveConnect.")
                 return
@@ -91,7 +92,7 @@ def pull_conversations(total_convos_to_fetch, google_creds, first_convo, convos_
             id_contacto = messages_data['conversacion']['id_contacto']
             
             # Manda a llamar la función para agrupar todo el historial de conversaciones del usuario
-            convo_table, canal, system_message_rows = group_convo(pageGearToken, id_contacto, user_full_name, get_canal=True, include_internal_msgs=True)
+            convo_table, canal, system_message_rows = execute_api_operation(group_convo, pageGearToken, id_contacto, user_full_name, get_canal=True, include_internal_msgs=True)
 
             result = export_to_csv(canal, user_full_name, convo_table, google_creds, system_message_rows, format_option, google_file_ids, logs, log_container)
             if not result:
@@ -110,7 +111,7 @@ def pull_conversations(total_convos_to_fetch, google_creds, first_convo, convos_
                 id_contacto = x['id_contacto']
 
                 # Manda a llamar la función para agrupar todo el historial de conversaciones del usuario
-                convo_table, canal, system_message_rows = group_convo(pageGearToken, id_contacto, user_full_name, get_canal=True, include_internal_msgs=True)
+                convo_table, canal, system_message_rows = execute_api_operation(group_convo, pageGearToken, id_contacto, user_full_name, get_canal=True, include_internal_msgs=True)
                 
                 result = export_to_csv(canal, user_full_name, convo_table, google_creds, system_message_rows, format_option, google_file_ids, logs, log_container)
                 if not result:

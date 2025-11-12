@@ -11,8 +11,8 @@ from gspread.exceptions import APIError
 
 def exponential_backoff(func):
     def wrapper(*args, **kwargs):
-        max_retries = 5 # El máximo número de intentos que va a hacer antes de cancelar el run
-        base_delay = 5  # en segundos
+        max_retries = 6 # El máximo número de intentos que va a hacer antes de cancelar el run
+        base_delay = 3  # en segundos
         for attempt in range(max_retries):
             # Por cada intento, checa si el request se completó sin errores
             # Si regresa un error 429, significa que topo el límite
@@ -22,7 +22,7 @@ def exponential_backoff(func):
             except APIError as e:
                 if e.response.status_code == 429 and attempt < max_retries - 1:
                     delay = base_delay * (2 ** attempt) + random.uniform(0, 1)
-                    print(f"Error de API 429. Reintentando en {delay:.2f} segundos...")
+                    print(f"Error de API 429 en la función {func.__name__}. Reintentando en {delay:.2f} segundos...")
                     time.sleep(delay)
                 else:
                     raise
