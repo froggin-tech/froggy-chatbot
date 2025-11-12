@@ -1,6 +1,6 @@
 #
-# Versión 1.1
-# Fecha: 08 de octubre de 2025
+# Versión 2.0
+# Fecha: 12 de noviembre de 2025
 #
 # Autores: Helena Ruiz Ramírez
 # Función: Instrucciones para desplegar la aplicación de exports con Docker
@@ -24,14 +24,29 @@ RUN mkdir -p export-to-sheets utils
 COPY export-to-sheets/ ./export-to-sheets/
 COPY utils/ ./utils/
 
-# Hace que el puerto 8501 esté disponible
-EXPOSE 8501
+# Hace que el puerto 8080 esté disponible
+EXPOSE 8080
 
 # Define la variable de entorno para el puerto
-ENV PORT=8501
+ENV PORT=8080
+
+ENV STREAMLIT_SERVER_HEADLESS=true \
+    STREAMLIT_SERVER_PORT=8080 \
+    STREAMLIT_SERVER_ADDRESS=0.0.0.0 \
+    STREAMLIT_SERVER_ENABLECORS=false \
+    STREAMLIT_SERVER_ENABLEXSRFPROTECTION=true \
+    STREAMLIT_SERVER_ENABLEWEBSOCKETCOMPRESSION=false \
+    STREAMLIT_BROWSER_GATHER_USAGE_STATS=false
 
 # Le dice a la aplicación que considere el path completo (no solo /export-to-sheets) al correr
 ENV PYTHONPATH="/app"
 
 # Ejecuta la aplicación streamlit cuando el contenedor se inicie
-CMD ["streamlit", "run", "export-to-sheets/streamlit_app.py", "--server.port", "8501", "--server.headless=true", "--logger.level", "error", "--server.enableCORS=false", "--server.runOnSave=false"]
+CMD ["bash", "-lc", "\
+    streamlit run export-to-sheets/streamlit_app.py \
+    --server.port=${PORT:-8080} \
+    --server.address=0.0.0.0 \
+    --server.headless=true \
+    --server.enableCORS=false \
+    --server.runOnSave=false \
+    --logger.level=info"]
