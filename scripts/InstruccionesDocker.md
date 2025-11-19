@@ -1,7 +1,6 @@
 # Instrucciones para Copiar el Proyecto
 
 Para replicar las herramientas de "callback" y "export" elaboradas en estos scripts, es necesario armar la "imagen" usando la tecnología de Docker. Esto permite que cada versión construida de estas aplicaciones se haga exactamente de la misma manera y con un solo comando.
-
 Esta la opción de usar la terminal, pero es recomendable instalar Docker Desktop. Esta hecho con una interfaz amigable para usuarios y es más fácil de manejar.
 
 ## Requisitos
@@ -16,31 +15,38 @@ Esta la opción de usar la terminal, pero es recomendable instalar Docker Deskto
 1. **Abrir Docker Desktop:** Asegurese de que la aplicación está corriendo.
 2. **Navegar al Project Directory:** Abra el explorador de archivos y vaya al folder donde se encuentra este README.md. Este es el directorio del proyecto.
 3.  **Armar la Imagen:**
-    *   De click en la pestaña de "Images".
-    *   De click en el botón de "Build".
-    *   En el campo de "Path", escriba "." (sin las comillas). Esto le dice a Docker que debe utilizar el directorio actual (paso 2).
-    *   En el campo de "Dockerfile", escriba "docker/dockerfile\_export" o "docker/dockerfile\_callback" (sin las comillas). Esto especifica cual proyecto quiere construir a partir de un dockerfile.
-    *   En el campo de "Tags", escriba un nombre para su imagen. Puede ser "proyecto-export" o "proyecto-callback" (sin las comillas).
-    *   De click al botón "Build". Docker Desktop ahora va a armar la imagen. Puede revisar el progreso en la pestaña de "Build".
+    *   Abra la terminal o el command prompt.
+    *   Navegue al directorio del proyecto (donde se encuentra este archivo README.md).
+    *   Ejecute el siguiente comando:
+        ```bash
+        docker build -t your-image-name -f docker/dockerfile_export .
+        ```
+        Reemplace `your-image-name` con el nombre que desee para su imagen. Por ejemplo, `franny-export`.
+
+        **Note for Windows users:** These commands should work in PowerShell or in the Docker Desktop's terminal.
+
 4.  **Correr la Imagen:**
-    *   Cuando la imagen se haya construido, vaya a la pestaña de "Images".
-    *   Busque la imagen que acaba de construir ("proyecto-export", "proyecto-callback").
-    *   De click al botón "Run" a un lado de la imagen.
-    *   En la sección de "Optional settings", de click a "port mapping".
-    *   En el campo de "Host port", escriba "8000".
-    *   En el campo de "Container port", escriba "8000".
-    *   De click al botón de "Run". Docker Desktop ahora va a correr el contenedor.
-5.  **Revise la Aplicación:** Abra su navegador de preferencia y vaya a la liga `http://localhost:8000`. Debería de ver la aplicación corriendo ya sea con un mensaje o con una interfaz.
+    *   Abra la terminal o el command prompt.
+    *   Ejecute el siguiente comando:
+        ```bash
+        docker run -p 8000:8000 your-image-name
+        ```
+        Reemplace `your-image-name` con el nombre que le dio a su imagen en el paso anterior.
+
+5.  **Monitorear el estado de "build" en Docker Desktop (opcional)**
+    *   Abra Docker Desktop.
+    *   Vaya a la sección de "Containers/Apps".
+    *   Aquí puede ver el estado de su "build" y los logs.
+
+6.  **Revise la Aplicación:** Abra su navegador de preferencia y vaya a la liga `http://localhost:8000`. Debería de ver la aplicación corriendo ya sea con un mensaje o con una interfaz.
 
 ## Variables de Entorno
 
-La aplicación requiere variables de entorno para funcionar correctamente. Estas variables se encuentran en el archivo `.env` en el directorio raíz del proyecto. Para configurar estas variables en Docker Desktop:
+La aplicación requiere variables de entorno para funcionar correctamente. Estas variables se encuentran en el archivo `.env` en el directorio raíz del proyecto. Para configurar estas variables:
 
-1.  Cuando corra la imagen (paso 4), expanda la sección "Optional settings".
-2.  De click en "Environment variables".
-3.  Agregue cada variable de entorno y su valor correspondiente. Por ejemplo:
-    *   `LC_C_KEY`: (valor de su archivo `.env`)
-    *   `LC_PRIVATE_KEY`: (valor de su archivo `.env`)
-    *   `GPT_KEY`: (valor de su archivo `.env`)
-    *   etc.
-4.  De click al botón de "Run" para correr el contenedor con las variables de entorno configuradas.
+1.  Cree un archivo `.env` en el directorio raíz del proyecto copiando el contenido de `.env.example` y reemplazando los valores de marcador de posición con sus valores reales.
+2.  Cuando corra la imagen (paso 4), puede especificar las variables de entorno usando la bandera `-e` en el comando `docker run`. Por ejemplo:
+    ```bash
+    docker run -p 8000:8000 -e LC_C_KEY=your_lc_c_key -e LC_PRIVATE_KEY=your_lc_private_key your-image-name
+    ```
+    Reemplace `your_lc_c_key` y `your_lc_private_key` con los valores reales de sus variables de entorno.
