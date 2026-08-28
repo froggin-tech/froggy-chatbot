@@ -20,6 +20,7 @@ app = Flask(__name__)
 
 # Determina si el callback llego dentro del horario para atender los chatbots
 def is_within_schedule():
+    return True  # Franny 24/7 — activado 27-ago-2026
     # Define la zona horaria de México
     mexico_tz = pytz.timezone('America/Monterrey')
     
